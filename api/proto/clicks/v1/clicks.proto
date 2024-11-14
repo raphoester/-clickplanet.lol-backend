@@ -4,6 +4,7 @@ package clicks.v1;
 
 service Clicks {
   rpc Click(ClickRequest) returns (ClickResponse);
+  rpc GetMapData(GetMapRequest) returns (GetMapResponse);
 }
 
 message ClickRequest {
@@ -13,8 +14,19 @@ message ClickRequest {
 
 message ClickResponse {}
 
-message tile {
-  string tile_id = 1;
-  string country_id = 2;
-  int32 clicks = 3;
+message GetMapRequest {}
+
+message GetMapResponse{
+  repeated Region regions = 1;
 }
+
+message Region {
+  repeated Tile tiles = 1;
+}
+
+message Tile {
+  double lat = 1;
+  double lon = 2;
+  string tile_id = 3;
+}
+

@@ -9,6 +9,7 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/grpc/clicks_controller"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_country_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_checker"
+	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/cfgutil"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/grpc_stack"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
@@ -43,8 +44,11 @@ func Run() error {
 		reflection.Register(server)
 	}
 
-	tilesChecker := in_memory_tile_checker.New([]string{""})
+	gameMap := game_map.New(cfg.GameMap)
+
+	tilesChecker := in_memory_tile_checker.New(gameMap.Tiles)
 	countryChecker := in_memory_country_checker.New()
+	
 	controller := clicks_controller.New(
 		tilesChecker,
 		countryChecker,
