@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package clicks.v1;
+
+service Clicks {
+  rpc Click(ClickRequest) returns (ClickResponse);
+}
+
+message ClickRequest {
+   string tile_id = 1;
+   string country_id = 2;
+}
+
+message ClickResponse {}
+
+message tile {
+  string tile_id = 1;
+  string country_id = 2;
+  int32 clicks = 3;
+}
