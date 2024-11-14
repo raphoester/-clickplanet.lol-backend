@@ -1,4 +1,4 @@
-package api
+package main
 
 import "github.com/raphoester/clickplanet.lol-backend/internal/app"
 
