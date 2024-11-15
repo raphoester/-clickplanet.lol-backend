@@ -1,0 +1,6 @@
+httpServer:
+  bindAddress: localhost:8080
+gameMap:
+  rows_count: 150
+  horizontalDensityIndex: 2
+  regionsCount: 300

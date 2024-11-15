@@ -1,17 +1,15 @@
 package clicks_controller
 
 import (
-	"context"
+	"encoding/json"
+	"net/http"
 
 	clicksv1 "github.com/raphoester/clickplanet.lol-backend/generated/proto/clicks/v1"
+	"google.golang.org/protobuf/proto"
 )
 
-func (c *Controller) GetMap(
-	ctx context.Context,
-	req *clicksv1.GetMapRequest,
-) (*clicksv1.GetMapResponse, error) {
+func (c *Controller) GetMap(w http.ResponseWriter, r *http.Request) {
 	theMap := c.mapGetter.GetMap()
-	
 	// TODO: avoid re-mapping on each call
 
 	protoRegions := make([]*clicksv1.Region, 0, len(theMap.Regions))
@@ -37,7 +35,13 @@ func (c *Controller) GetMap(
 		})
 	}
 
-	return &clicksv1.GetMapResponse{
-		Regions: protoRegions,
-	}, nil
+	protoBytes, err := proto.Marshal(&clicksv1.Map{Regions: protoRegions})
+	if err != nil {
+		http.Error(w, "failed to marshal map", http.StatusInternalServerError)
+		return
+	}
+
+	_ = json.NewEncoder(w).Encode(map[string][]byte{"data": protoBytes})
+
+	return
 }

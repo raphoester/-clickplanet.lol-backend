@@ -2,21 +2,12 @@ syntax = "proto3";
 
 package clicks.v1;
 
-service Clicks {
-  rpc Click(ClickRequest) returns (ClickResponse);
-  rpc GetMap(GetMapRequest) returns (GetMapResponse);
-}
-
 message ClickRequest {
    string tile_id = 1;
    string country_id = 2;
 }
 
-message ClickResponse {}
-
-message GetMapRequest {}
-
-message GetMapResponse{
+message Map {
   repeated Region regions = 1;
 }
 

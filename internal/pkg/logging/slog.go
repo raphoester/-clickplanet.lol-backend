@@ -11,9 +11,10 @@ import (
 
 func NewSLogger() *SLogger {
 	return &SLogger{
-		logger: slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelInfo,
-		})),
+		logger: slog.New(
+			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+				Level: slog.LevelDebug,
+			})),
 	}
 }
 

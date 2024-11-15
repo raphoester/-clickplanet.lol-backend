@@ -3,20 +3,16 @@ package app
 import (
 	"flag"
 	"fmt"
-	"net"
+	"net/http"
 
-	clicksv1 "github.com/raphoester/clickplanet.lol-backend/generated/proto/clicks/v1"
-	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/grpc/clicks_controller"
+	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/http/clicks_controller"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_country_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_map_getter"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/cfgutil"
-	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/grpc_stack"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 func Run() error {
@@ -36,14 +32,7 @@ func Run() error {
 		return fmt.Errorf("failed reading config: %w", err)
 	}
 
-	server := grpc.NewServer(
-		grpc.UnaryInterceptor(grpc_stack.LoggingUnaryInterceptor(logger)),
-		grpc.StreamInterceptor(grpc_stack.LoggingStreamInterceptor(logger)),
-	)
-
-	if cfg.GRPCServer.EnableReflection {
-		reflection.Register(server)
-	}
+	logger.Debug("Config loaded", lf.Any("config", cfg))
 
 	gameMap := game_map.Generate(cfg.GameMap)
 
@@ -57,20 +46,22 @@ func Run() error {
 		mapGetter,
 	)
 
-	clicksv1.RegisterClicksServer(server, controller)
+	router := http.NewServeMux()
 
-	listener, err := net.Listen("tcp", cfg.GRPCServer.BindAddress)
-	if err != nil {
-		return fmt.Errorf("failed to listen on given bind address: %w", err)
+	router.HandleFunc("GET /map", controller.GetMap)
+	router.HandleFunc("POST /click", controller.HandleClick)
+
+	server := http.Server{
+		Addr: cfg.HTTPServer.BindAddress,
 	}
 
 	logger.Info("Listening",
-		lf.String("address", listener.Addr().String()),
+		lf.String("address", server.Addr),
 	)
 
-	err = server.Serve(listener)
+	err := server.ListenAndServe()
 	if err != nil {
-		return fmt.Errorf("failed serving: %w", err)
+		return fmt.Errorf("failed to serve: %w", err)
 	}
 
 	return nil
