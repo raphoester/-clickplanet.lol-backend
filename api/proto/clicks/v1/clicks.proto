@@ -4,7 +4,7 @@ package clicks.v1;
 
 service Clicks {
   rpc Click(ClickRequest) returns (ClickResponse);
-  rpc GetMapData(GetMapRequest) returns (GetMapResponse);
+  rpc GetMap(GetMapRequest) returns (GetMapResponse);
 }
 
 message ClickRequest {
@@ -25,8 +25,12 @@ message Region {
 }
 
 message Tile {
-  double lat = 1;
-  double lon = 2;
-  string tile_id = 3;
+  GeodesicCoordinates south_west = 1;
+  GeodesicCoordinates north_east = 2;
+  string id = 3;
 }
 
+message GeodesicCoordinates {
+  double lat = 1;
+  double lon = 2;
+}

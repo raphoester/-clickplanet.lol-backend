@@ -5,21 +5,25 @@ import (
 	"errors"
 
 	clicksv1 "github.com/raphoester/clickplanet.lol-backend/generated/proto/clicks/v1"
+	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 )
 
 func New(
 	tilesChecker TilesChecker,
 	countryChecker CountryChecker,
+	mapGetter MapGetter,
 ) *Controller {
 	return &Controller{
 		tilesChecker:   tilesChecker,
 		countryChecker: countryChecker,
+		mapGetter:      mapGetter,
 	}
 }
 
 type Controller struct {
 	tilesChecker   TilesChecker
 	countryChecker CountryChecker
+	mapGetter      MapGetter
 	*clicksv1.UnimplementedClicksServer
 }
 
@@ -29,6 +33,10 @@ type TilesChecker interface {
 
 type CountryChecker interface {
 	Check(country string) bool
+}
+
+type MapGetter interface {
+	GetMap() *game_map.GameMap
 }
 
 func (c *Controller) HandleClick(

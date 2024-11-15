@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Clicks_Click_FullMethodName      = "/clicks.v1.Clicks/Click"
-	Clicks_GetMapData_FullMethodName = "/clicks.v1.Clicks/GetMapData"
+	Clicks_Click_FullMethodName  = "/clicks.v1.Clicks/Click"
+	Clicks_GetMap_FullMethodName = "/clicks.v1.Clicks/GetMap"
 )
 
 // ClicksClient is the client API for Clicks service.
@@ -28,7 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ClicksClient interface {
 	Click(ctx context.Context, in *ClickRequest, opts ...grpc.CallOption) (*ClickResponse, error)
-	GetMapData(ctx context.Context, in *GetMapRequest, opts ...grpc.CallOption) (*GetMapResponse, error)
+	GetMap(ctx context.Context, in *GetMapRequest, opts ...grpc.CallOption) (*GetMapResponse, error)
 }
 
 type clicksClient struct {
@@ -48,9 +48,9 @@ func (c *clicksClient) Click(ctx context.Context, in *ClickRequest, opts ...grpc
 	return out, nil
 }
 
-func (c *clicksClient) GetMapData(ctx context.Context, in *GetMapRequest, opts ...grpc.CallOption) (*GetMapResponse, error) {
+func (c *clicksClient) GetMap(ctx context.Context, in *GetMapRequest, opts ...grpc.CallOption) (*GetMapResponse, error) {
 	out := new(GetMapResponse)
-	err := c.cc.Invoke(ctx, Clicks_GetMapData_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, Clicks_GetMap_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *clicksClient) GetMapData(ctx context.Context, in *GetMapRequest, opts .
 // for forward compatibility
 type ClicksServer interface {
 	Click(context.Context, *ClickRequest) (*ClickResponse, error)
-	GetMapData(context.Context, *GetMapRequest) (*GetMapResponse, error)
+	GetMap(context.Context, *GetMapRequest) (*GetMapResponse, error)
 	mustEmbedUnimplementedClicksServer()
 }
 
@@ -73,8 +73,8 @@ type UnimplementedClicksServer struct {
 func (UnimplementedClicksServer) Click(context.Context, *ClickRequest) (*ClickResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Click not implemented")
 }
-func (UnimplementedClicksServer) GetMapData(context.Context, *GetMapRequest) (*GetMapResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetMapData not implemented")
+func (UnimplementedClicksServer) GetMap(context.Context, *GetMapRequest) (*GetMapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMap not implemented")
 }
 func (UnimplementedClicksServer) mustEmbedUnimplementedClicksServer() {}
 
@@ -107,20 +107,20 @@ func _Clicks_Click_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Clicks_GetMapData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Clicks_GetMap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetMapRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ClicksServer).GetMapData(ctx, in)
+		return srv.(ClicksServer).GetMap(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Clicks_GetMapData_FullMethodName,
+		FullMethod: Clicks_GetMap_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClicksServer).GetMapData(ctx, req.(*GetMapRequest))
+		return srv.(ClicksServer).GetMap(ctx, req.(*GetMapRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -137,8 +137,8 @@ var Clicks_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Clicks_Click_Handler,
 		},
 		{
-			MethodName: "GetMapData",
-			Handler:    _Clicks_GetMapData_Handler,
+			MethodName: "GetMap",
+			Handler:    _Clicks_GetMap_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

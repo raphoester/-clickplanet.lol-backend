@@ -9,35 +9,29 @@ import (
 
 type Tile struct {
 	southWest coordinates.Geodesic
-	southEast coordinates.Geodesic
 	northEast coordinates.Geodesic
-	northWest coordinates.Geodesic
 	epicenter *coordinates.Geodesic
 }
 
 func NewTile(southWestLon, southWestLat, lonStep, latStep float64) *Tile {
 	southWest := coordinates.MustNewGeodesic(southWestLon, southWestLat)
-	southEast := coordinates.MustNewGeodesic(southWestLon+lonStep, southWestLat)
 	northEast := coordinates.MustNewGeodesic(southWestLon+lonStep, southWestLat+latStep)
-	northWest := coordinates.MustNewGeodesic(southWestLon, southWestLat+latStep)
 
 	return &Tile{
 		southWest: southWest,
-		southEast: southEast,
 		northEast: northEast,
-		northWest: northWest,
 		epicenter: nil,
 	}
 }
 
-func (t *Tile) GetBoundaries() []coordinates.Geodesic {
-	return []coordinates.Geodesic{t.southWest, t.southEast, t.northEast, t.northWest}
+func (t *Tile) GetBoundaries() (coordinates.Geodesic, coordinates.Geodesic) {
+	return t.southWest, t.northEast
 }
 
 func (t *Tile) Epicenter() coordinates.Geodesic {
 	if t.epicenter == nil {
-		latitude := (t.southWest.Latitude() + t.southEast.Latitude() + t.northEast.Latitude() + t.northWest.Latitude()) / 4
-		longitude := (t.southWest.Longitude() + t.southEast.Longitude() + t.northEast.Longitude() + t.northWest.Longitude()) / 4
+		latitude := (t.southWest.Latitude() + t.northEast.Latitude()) / 2
+		longitude := (t.southWest.Longitude() + t.northEast.Longitude()) / 2
 		*t.epicenter = coordinates.MustNewGeodesic(longitude, latitude)
 	}
 	return *t.epicenter

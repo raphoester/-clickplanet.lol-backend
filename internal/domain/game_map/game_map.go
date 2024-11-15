@@ -8,7 +8,7 @@ type GameMapConfig struct {
 	RegionsCount           int
 }
 
-func New(config GameMapConfig) GameMap {
+func Generate(config GameMapConfig) *GameMap {
 	tiles := generateTiles(
 		config.RowsCount,
 		config.HorizontalDensityIndex)
@@ -18,7 +18,7 @@ func New(config GameMapConfig) GameMap {
 		// points should already be normalized
 		geodesicEpicenters = append(geodesicEpicenters, epicenter.ToGeodesic())
 	}
-	return GameMap{
+	return &GameMap{
 		Regions: assignTilesToRegions(geodesicEpicenters, tiles),
 		Tiles:   tiles,
 	}

@@ -8,6 +8,7 @@ import (
 	clicksv1 "github.com/raphoester/clickplanet.lol-backend/generated/proto/clicks/v1"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/grpc/clicks_controller"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_country_checker"
+	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_map_getter"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/cfgutil"
@@ -44,14 +45,16 @@ func Run() error {
 		reflection.Register(server)
 	}
 
-	gameMap := game_map.New(cfg.GameMap)
+	gameMap := game_map.Generate(cfg.GameMap)
 
 	tilesChecker := in_memory_tile_checker.New(gameMap.Tiles)
 	countryChecker := in_memory_country_checker.New()
-	
+	mapGetter := in_memory_map_getter.New(gameMap)
+
 	controller := clicks_controller.New(
 		tilesChecker,
 		countryChecker,
+		mapGetter,
 	)
 
 	clicksv1.RegisterClicksServer(server, controller)
