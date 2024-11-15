@@ -1,9 +1,9 @@
 package clicks_controller
 
 import (
-	"encoding/json"
 	"net/http"
 
+	clicksv1 "github.com/raphoester/clickplanet.lol-backend/generated/proto/clicks/v1"
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 )
 
@@ -19,25 +19,20 @@ type MapGetter interface {
 	GetMap() *game_map.GameMap
 }
 
-type HandleClickRequest struct {
-	CountryID string
-	TileID    string
-}
-
 func (c *Controller) HandleClick(w http.ResponseWriter, r *http.Request) {
-	var req HandleClickRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "failed to decode request", http.StatusBadRequest)
+	req := &clicksv1.ClickRequest{}
+	if err := readExchangeMsg(r, req); err != nil {
+		answerWithErr(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 
-	if !c.countryChecker.Check(req.CountryID) {
-		http.Error(w, "invalid country", http.StatusBadRequest)
+	if !c.countryChecker.Check(req.GetCountryId()) {
+		answerWithErr(w, "invalid country", http.StatusBadRequest)
 		return
 	}
 
-	if !c.tilesChecker.Check(req.TileID) {
-		http.Error(w, "invalid tile", http.StatusBadRequest)
+	if !c.tilesChecker.Check(req.GetTileId()) {
+		answerWithErr(w, "invalid tile", http.StatusBadRequest)
 		return
 	}
 }

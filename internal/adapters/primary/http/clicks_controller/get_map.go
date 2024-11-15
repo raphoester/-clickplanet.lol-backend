@@ -8,7 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func (c *Controller) GetMap(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) GetMap(w http.ResponseWriter, _ *http.Request) {
 	theMap := c.mapGetter.GetMap()
 	// TODO: avoid re-mapping on each call
 
@@ -42,11 +42,10 @@ func (c *Controller) GetMap(w http.ResponseWriter, r *http.Request) {
 
 	protoBytes, err := proto.Marshal(&clicksv1.Map{Regions: protoRegions})
 	if err != nil {
-		http.Error(w, "failed to marshal map", http.StatusInternalServerError)
+		answerWithErr(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
 	_ = json.NewEncoder(w).Encode(map[string][]byte{"data": protoBytes})
-
 	return
 }
