@@ -14,7 +14,7 @@ func (c *Controller) GetMap(w http.ResponseWriter, r *http.Request) {
 
 	protoRegions := make([]*clicksv1.Region, 0, len(theMap.Regions))
 	for _, region := range theMap.Regions {
-		tiles := region.GetTiles()
+		tiles := region.Tiles()
 		protoTiles := make([]*clicksv1.Tile, 0, len(tiles))
 		for _, tile := range tiles {
 			southWest, northEast := tile.GetBoundaries()
@@ -30,7 +30,12 @@ func (c *Controller) GetMap(w http.ResponseWriter, r *http.Request) {
 				Id: tile.ID(),
 			})
 		}
+		epicenter := region.Epicenter()
 		protoRegions = append(protoRegions, &clicksv1.Region{
+			Epicenter: &clicksv1.GeodesicCoordinates{
+				Lat: epicenter.Latitude(),
+				Lon: epicenter.Longitude(),
+			},
 			Tiles: protoTiles,
 		})
 	}

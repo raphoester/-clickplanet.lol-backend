@@ -11,11 +11,11 @@ type Region struct {
 	tiles     []Tile
 }
 
-func (r *Region) GetEpicenter() coordinates.Geodesic {
+func (r *Region) Epicenter() coordinates.Geodesic {
 	return r.epicenter
 }
 
-func (r *Region) GetTiles() []Tile {
+func (r *Region) Tiles() []Tile {
 	return r.tiles
 }
 

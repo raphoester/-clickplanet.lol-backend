@@ -12,7 +12,8 @@ message Map {
 }
 
 message Region {
-  repeated Tile tiles = 1;
+  GeodesicCoordinates epicenter = 1;
+  repeated Tile tiles = 2;
 }
 
 message Tile {
