@@ -35,7 +35,10 @@ func Run() error {
 
 	logger.Debug("Config loaded", lf.Any("config", cfg))
 
-	gameMap := game_map.Generate(cfg.GameMap)
+	gameMap, err := game_map.Generate(cfg.GameMap)
+	if err != nil {
+		return fmt.Errorf("failed to generate game map: %w", err)
+	}
 
 	tilesChecker := in_memory_tile_checker.New(gameMap.Tiles)
 	countryChecker := in_memory_country_checker.New()
@@ -66,7 +69,7 @@ func Run() error {
 		lf.String("address", server.Addr),
 	)
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		return fmt.Errorf("failed to serve: %w", err)
 	}

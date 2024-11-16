@@ -1,6 +1,10 @@
 package game_map
 
-import "github.com/raphoester/clickplanet.lol-backend/internal/domain/coordinates"
+import (
+	"fmt"
+
+	"github.com/raphoester/clickplanet.lol-backend/internal/domain/coordinates"
+)
 
 type GameMapConfig struct {
 	RowsCount              int
@@ -8,7 +12,27 @@ type GameMapConfig struct {
 	RegionsCount           int
 }
 
-func Generate(config GameMapConfig) *GameMap {
+func (g GameMapConfig) Validate() error {
+	if g.RowsCount < 1 {
+		return fmt.Errorf("rows count must be at least 1, was %d", g.RowsCount)
+	}
+
+	if g.HorizontalDensityIndex < 1 {
+		return fmt.Errorf("horizontal density index must be at least 1, was %d", g.HorizontalDensityIndex)
+	}
+
+	if g.RegionsCount < 1 {
+		return fmt.Errorf("regions count must be at least 1, was %d", g.RegionsCount)
+	}
+
+	return nil
+}
+
+func Generate(config GameMapConfig) (*GameMap, error) {
+	if err := config.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
+
 	tiles := generateTiles(
 		config.RowsCount,
 		config.HorizontalDensityIndex)
@@ -21,7 +45,7 @@ func Generate(config GameMapConfig) *GameMap {
 	return &GameMap{
 		Regions: assignTilesToRegions(geodesicEpicenters, tiles),
 		Tiles:   tiles,
-	}
+	}, nil
 }
 
 type GameMap struct {

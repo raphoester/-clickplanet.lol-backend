@@ -1,7 +1,7 @@
 package coordinates
 
 import (
-	"errors"
+	"fmt"
 	"math"
 )
 
@@ -13,13 +13,24 @@ func MustNewGeodesic(latitude, longitude float64) Geodesic {
 	return *c
 }
 
+func roundTo(x float64, targets ...float64) float64 {
+	for _, target := range targets {
+		if math.Abs(x-target) < 0.0001 {
+			return target
+		}
+	}
+	return x
+}
+
 func NewGeodesic(latitude, longitude float64) (*Geodesic, error) {
+	latitude = roundTo(latitude, 90, -90)
+	longitude = roundTo(longitude, 180, -180)
 	if latitude < -90 || latitude > 90 {
-		return nil, errors.New("latitude must be between -90 and 90")
+		return nil, fmt.Errorf("latitude must be between -90 and 90, was %f", latitude)
 	}
 
 	if longitude < -180 || longitude > 180 {
-		return nil, errors.New("longitude must be between -180 and 180")
+		return nil, fmt.Errorf("longitude must be between -180 and 180, was %f", longitude)
 	}
 
 	return &Geodesic{

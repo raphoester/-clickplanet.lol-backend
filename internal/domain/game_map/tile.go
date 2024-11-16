@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain/coordinates"
+	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/basicutil"
 )
 
 type Tile struct {
@@ -13,14 +14,15 @@ type Tile struct {
 	epicenter *coordinates.Geodesic
 }
 
-func NewTile(southWestLon, southWestLat, lonStep, latStep float64) *Tile {
-	southWest := coordinates.MustNewGeodesic(southWestLon, southWestLat)
-	northEast := coordinates.MustNewGeodesic(southWestLon+lonStep, southWestLat+latStep)
-
+func MustNewTile(
+	southLat, westLon,
+	latStep, lonStep float64,
+) *Tile {
+	southWest := coordinates.MustNewGeodesic(southLat, westLon)
+	northEast := coordinates.MustNewGeodesic(southLat+latStep, westLon+lonStep)
 	return &Tile{
 		southWest: southWest,
 		northEast: northEast,
-		epicenter: nil,
 	}
 }
 
@@ -32,7 +34,7 @@ func (t *Tile) Epicenter() coordinates.Geodesic {
 	if t.epicenter == nil {
 		latitude := (t.southWest.Latitude() + t.northEast.Latitude()) / 2
 		longitude := (t.southWest.Longitude() + t.northEast.Longitude()) / 2
-		*t.epicenter = coordinates.MustNewGeodesic(longitude, latitude)
+		t.epicenter = basicutil.Pointer(coordinates.MustNewGeodesic(latitude, longitude))
 	}
 	return *t.epicenter
 }
@@ -67,7 +69,7 @@ func generateTiles(rows int, density int) []Tile {
 
 		longitudeStep := absDiff(startLon, endLon) / float64(squaresCount)
 		for j := 0; j < squaresCount; j++ {
-			tile := NewTile(startLon+(float64(j)*longitudeStep), southBorderLatitude, longitudeStep, latitudeStep)
+			tile := MustNewTile(southBorderLatitude, startLon+(float64(j)*longitudeStep), latitudeStep, longitudeStep)
 			tiles = append(tiles, *tile)
 		}
 	}
