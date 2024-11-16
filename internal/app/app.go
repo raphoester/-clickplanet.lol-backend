@@ -11,6 +11,7 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/cfgutil"
+	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
 )
@@ -51,8 +52,14 @@ func Run() error {
 	router.HandleFunc("GET /map", controller.GetMap)
 	router.HandleFunc("POST /click", controller.HandleClick)
 
+	middlewares := httpserver.MiddlewareStack(
+		httpserver.NewLoggingMiddleware(logger),
+		httpserver.CorsMiddleware,
+	)
+
 	server := http.Server{
-		Addr: cfg.HTTPServer.BindAddress,
+		Addr:    cfg.HTTPServer.BindAddress,
+		Handler: middlewares(router),
 	}
 
 	logger.Info("Listening",
