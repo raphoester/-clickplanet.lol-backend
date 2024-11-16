@@ -4,20 +4,7 @@ import (
 	"net/http"
 
 	clicksv1 "github.com/raphoester/clickplanet.lol-backend/generated/proto/clicks/v1"
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 )
-
-type TilesChecker interface {
-	Check(tile string) bool
-}
-
-type CountryChecker interface {
-	Check(country string) bool
-}
-
-type MapGetter interface {
-	GetMap() *game_map.GameMap
-}
 
 func (c *Controller) HandleClick(w http.ResponseWriter, r *http.Request) {
 	req := &clicksv1.ClickRequest{}
@@ -35,4 +22,6 @@ func (c *Controller) HandleClick(w http.ResponseWriter, r *http.Request) {
 		answerWithErr(w, "invalid tile", http.StatusBadRequest)
 		return
 	}
+
+	c.tilesStorage.Set(req.GetTileId(), req.GetCountryId())
 }

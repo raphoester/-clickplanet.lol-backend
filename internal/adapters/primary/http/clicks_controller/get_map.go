@@ -1,11 +1,9 @@
 package clicks_controller
 
 import (
-	"encoding/json"
 	"net/http"
 
 	clicksv1 "github.com/raphoester/clickplanet.lol-backend/generated/proto/clicks/v1"
-	"google.golang.org/protobuf/proto"
 )
 
 func (c *Controller) GetMap(w http.ResponseWriter, _ *http.Request) {
@@ -40,12 +38,7 @@ func (c *Controller) GetMap(w http.ResponseWriter, _ *http.Request) {
 		})
 	}
 
-	protoBytes, err := proto.Marshal(&clicksv1.Map{Regions: protoRegions})
-	if err != nil {
-		answerWithErr(w, "internal error", http.StatusInternalServerError)
-		return
-	}
-
-	_ = json.NewEncoder(w).Encode(map[string][]byte{"data": protoBytes})
-	return
+	answerWithData(w, &clicksv1.Map{
+		Regions: protoRegions,
+	})
 }
