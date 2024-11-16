@@ -9,6 +9,7 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_country_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_map_getter"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_checker"
+	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_storage"
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/cfgutil"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
@@ -43,11 +44,14 @@ func Run() error {
 	tilesChecker := in_memory_tile_checker.New(gameMap.Tiles)
 	countryChecker := in_memory_country_checker.New()
 	mapGetter := in_memory_map_getter.New(gameMap)
+	tilesStorage := in_memory_tile_storage.New()
 
 	controller := clicks_controller.New(
 		tilesChecker,
 		countryChecker,
 		mapGetter,
+		tilesStorage,
+		logger,
 	)
 
 	router := http.NewServeMux()

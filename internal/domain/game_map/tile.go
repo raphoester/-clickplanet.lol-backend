@@ -40,7 +40,7 @@ func (t *Tile) Epicenter() coordinates.Geodesic {
 }
 
 func (t *Tile) ID() string {
-	return fmt.Sprintf("%f;%f", t.southWest.Latitude(), t.southWest.Longitude())
+	return fmt.Sprintf("%0.3f;%0.3f", t.southWest.Latitude(), t.southWest.Longitude())
 }
 
 func absDiff(a, b float64) float64 {

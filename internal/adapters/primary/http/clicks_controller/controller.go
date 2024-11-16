@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
+	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -14,8 +15,10 @@ func New(
 	countryChecker CountryChecker,
 	mapGetter MapGetter,
 	tilesStorage TileStorage,
+	logger logging.Logger,
 ) *Controller {
 	return &Controller{
+		logger:         logger,
 		tilesChecker:   tilesChecker,
 		countryChecker: countryChecker,
 		mapGetter:      mapGetter,
@@ -24,6 +27,7 @@ func New(
 }
 
 type Controller struct {
+	logger         logging.Logger
 	tilesChecker   TilesChecker
 	countryChecker CountryChecker
 	mapGetter      MapGetter
@@ -59,6 +63,11 @@ type ErrorFormat struct {
 func answerWithErr(w http.ResponseWriter, cause string, status int) {
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(ErrorFormat{Cause: cause})
+}
+
+func answerEmpty(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(struct{}{})
 }
 
 func answerWithData(w http.ResponseWriter, protoMsg proto.Message) {
