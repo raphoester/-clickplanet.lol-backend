@@ -38,7 +38,7 @@ func (c *Controller) GetMap(w http.ResponseWriter, _ *http.Request) {
 		})
 	}
 
-	answerWithData(w, &clicksv1.Map{
+	c.answerWithData(w, &clicksv1.Map{
 		Regions: protoRegions,
 	})
 }

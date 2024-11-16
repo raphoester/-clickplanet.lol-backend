@@ -9,5 +9,5 @@ import (
 func (c *Controller) GetCurrentState(w http.ResponseWriter, _ *http.Request) {
 	tiles := c.tilesStorage.Get()
 	response := &clicksv1.State{Data: tiles}
-	answerWithData(w, response)
+	c.answerWithData(w, response)
 }

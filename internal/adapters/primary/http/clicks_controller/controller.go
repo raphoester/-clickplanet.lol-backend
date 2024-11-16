@@ -7,6 +7,7 @@ import (
 
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
+	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -60,25 +61,35 @@ type ErrorFormat struct {
 	Cause string `json:"cause"`
 }
 
-func answerWithErr(w http.ResponseWriter, cause string, status int) {
+func (c *Controller) answerWithErr(w http.ResponseWriter, logErr error, cause string, status int) {
 	w.WriteHeader(status)
+	c.logger.Error("error occurred", lf.Err(logErr))
 	_ = json.NewEncoder(w).Encode(ErrorFormat{Cause: cause})
 }
 
-func answerEmpty(w http.ResponseWriter) {
+func (c *Controller) answerEmpty(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(struct{}{})
 }
 
-func answerWithData(w http.ResponseWriter, protoMsg proto.Message) {
+func (c *Controller) answerWithData(w http.ResponseWriter, protoMsg proto.Message) {
 	protoBytes, err := proto.Marshal(protoMsg)
 	if err != nil {
-		answerWithErr(w, "internal error", http.StatusInternalServerError)
+		c.answerWithErr(w,
+			fmt.Errorf("failed marshalling proto msg: %w", err),
+			"internal error",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
 	if err := json.NewEncoder(w).Encode(ExchangeFormat{Data: protoBytes}); err != nil {
-		answerWithErr(w, "internal error", http.StatusInternalServerError)
+		c.logger.Error("failed to encode response", lf.Err(err))
+		c.answerWithErr(w,
+			fmt.Errorf("failed to encode wrapping json: %w", err),
+			"internal error",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 }
