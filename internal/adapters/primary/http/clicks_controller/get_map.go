@@ -10,6 +10,8 @@ func (c *Controller) GetMap(w http.ResponseWriter, _ *http.Request) {
 	theMap := c.mapGetter.GetMap()
 	// TODO: avoid re-mapping on each call
 
+	tileCountries := c.tilesStorage.Get()
+
 	protoRegions := make([]*clicksv1.Region, 0, len(theMap.Regions))
 	for _, region := range theMap.Regions {
 		tiles := region.Tiles()
@@ -25,7 +27,8 @@ func (c *Controller) GetMap(w http.ResponseWriter, _ *http.Request) {
 					Lat: northEast.Latitude(),
 					Lon: northEast.Longitude(),
 				},
-				Id: tile.ID(),
+				Id:        tile.ID(),
+				CountryId: tileCountries[tile.ID()],
 			})
 		}
 		epicenter := region.Epicenter()

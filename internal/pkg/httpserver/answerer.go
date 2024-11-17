@@ -70,9 +70,9 @@ func answerBinary(a *Answerer, w http.ResponseWriter, protoMsg proto.Message) {
 			"internal error", http.StatusInternalServerError)
 		return
 	}
-	_, err = w.Write(protoBytes)
-	if err != nil {
-		a.Err(w, fmt.Errorf("failed writing proto bytes: %w", err),
+
+	if err := json.NewEncoder(w).Encode(ExchangeFormat{Data: protoBytes}); err != nil {
+		a.Err(w, fmt.Errorf("failed encoding exchange format: %w", err),
 			"internal error", http.StatusInternalServerError)
 	}
 }

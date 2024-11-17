@@ -50,7 +50,7 @@ func (a *App) Configure() error {
 		return fmt.Errorf("failed to generate game map: %w", err)
 	}
 
-	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeJSON)
+	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeBinary)
 
 	tilesChecker := in_memory_tile_checker.New(gameMap.Tiles)
 	countryChecker := in_memory_country_checker.New()
@@ -65,7 +65,7 @@ func (a *App) Configure() error {
 		mapGetter,
 		tilesStorage,
 		answerer,
-		httpserver.JSONReader{},
+		httpserver.ProtoReader{},
 	)
 
 	a.declareRoutes()
