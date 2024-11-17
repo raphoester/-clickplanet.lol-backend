@@ -3,6 +3,7 @@ module github.com/raphoester/clickplanet.lol-backend
 go 1.23.0
 
 require (
+	github.com/coder/websocket v1.8.12
 	github.com/knadh/koanf/parsers/yaml v0.1.0
 	github.com/knadh/koanf/providers/env v1.0.0
 	github.com/knadh/koanf/providers/file v1.1.2

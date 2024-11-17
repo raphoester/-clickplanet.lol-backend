@@ -10,7 +10,7 @@ func New() *Checker {
 	}
 }
 
-func (c *Checker) Check(s string) bool {
+func (c *Checker) CheckCountry(s string) bool {
 	_, ok := c.countries[s]
 	return ok
 }

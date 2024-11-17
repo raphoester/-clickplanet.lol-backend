@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/http/clicks_controller"
+	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/http/websocket_publisher"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_country_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_map_getter"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_checker"
@@ -41,37 +42,55 @@ func Run() error {
 		return fmt.Errorf("failed to generate game map: %w", err)
 	}
 
+	answerer := httpserver.NewAnswerer(logger, httpserver.AnswerModeJSON)
+
 	tilesChecker := in_memory_tile_checker.New(gameMap.Tiles)
 	countryChecker := in_memory_country_checker.New()
 	mapGetter := in_memory_map_getter.New(gameMap)
 	tilesStorage := in_memory_tile_storage.New()
+
+	router := http.NewServeMux()
+
+	publisher := websocket_publisher.New(tilesStorage.Subscribe(), answerer)
+	wsRouter := http.NewServeMux()
+	wsRouter.HandleFunc("GET /listen", publisher.Subscribe)
 
 	controller := clicks_controller.New(
 		tilesChecker,
 		countryChecker,
 		mapGetter,
 		tilesStorage,
-		logger,
+		answerer,
+		httpserver.JSONReader{},
 	)
 
-	router := http.NewServeMux()
+	appRouter := http.NewServeMux()
+	appRouter.HandleFunc("GET /map", controller.GetMap)
+	appRouter.HandleFunc("POST /click", controller.HandleClick)
 
-	router.HandleFunc("GET /map", controller.GetMap)
-	router.HandleFunc("POST /click", controller.HandleClick)
-
-	middlewares := httpserver.MiddlewareStack(
+	appMiddlewares := httpserver.MiddlewareStack(
 		httpserver.NewLoggingMiddleware(logger),
 		httpserver.CorsMiddleware,
 	)
 
+	router.Handle("/app/",
+		http.StripPrefix("/app", appMiddlewares(appRouter)),
+	)
+
+	router.Handle("/ws/",
+		http.StripPrefix("/ws", wsRouter),
+	)
+
 	server := http.Server{
 		Addr:    cfg.HTTPServer.BindAddress,
-		Handler: middlewares(router),
+		Handler: router,
 	}
 
 	logger.Info("Listening",
 		lf.String("address", server.Addr),
 	)
+
+	go publisher.Run()
 
 	err = server.ListenAndServe()
 	if err != nil {

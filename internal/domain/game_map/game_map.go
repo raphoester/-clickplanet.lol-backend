@@ -6,6 +6,10 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain/coordinates"
 )
 
+type Getter interface {
+	GetMap() *GameMap
+}
+
 type GameMapConfig struct {
 	RowsCount              int
 	HorizontalDensityIndex int

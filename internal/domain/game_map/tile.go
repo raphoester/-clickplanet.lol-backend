@@ -75,3 +75,25 @@ func generateTiles(rows int, density int) []Tile {
 	}
 	return tiles
 }
+
+type TilesChecker interface {
+	CheckTile(tile string) bool
+}
+
+type TileStorage interface {
+	Set(tile string, value string)
+	Get() map[string]string
+}
+
+type TileReporter interface {
+	Subscribe() <-chan TileUpdate
+}
+
+type TileUpdate struct {
+	Tile  string
+	Value string
+}
+
+type CountryChecker interface {
+	CheckCountry(country string) bool
+}

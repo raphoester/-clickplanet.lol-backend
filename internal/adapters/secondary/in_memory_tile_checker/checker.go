@@ -16,7 +16,7 @@ type Checker struct {
 	tiles map[string]struct{}
 }
 
-func (c *Checker) Check(tile string) bool {
+func (c *Checker) CheckTile(tile string) bool {
 	_, ok := c.tiles[tile]
 	return ok
 }
