@@ -81,6 +81,7 @@ func (a *App) declareRoutes() {
 	appRouter := http.NewServeMux()
 	appRouter.HandleFunc("GET /map", a.controller.GetMap)
 	appRouter.HandleFunc("POST /click", a.controller.HandleClick)
+	appRouter.HandleFunc("GET /bindings", a.controller.GetBindings)
 
 	appMiddlewares := httpserver.MiddlewareStack(
 		httpserver.NewLoggingMiddleware(a.logger),
