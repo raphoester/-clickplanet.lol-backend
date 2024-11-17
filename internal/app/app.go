@@ -18,44 +18,48 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
 )
 
-func Run() error {
-	logger := logging.NewSLogger()
+type App struct {
+	config Config
+	logger logging.Logger
+	server *http.Server
 
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Error("recovered from panic", lf.Any("panic", r))
-		}
-	}()
+	publisher  *websocket_publisher.Publisher
+	controller *clicks_controller.Controller
+}
 
+func New() (*App, error) {
 	c := flag.String("config", "", "path to config file")
 	flag.Parse()
 
 	cfg := Config{}
 	if err := cfgutil.NewLoader(*c).Unmarshal(&cfg); err != nil {
-		return fmt.Errorf("failed reading config: %w", err)
+		return nil, fmt.Errorf("failed reading config: %w", err)
 	}
 
-	logger.Debug("Config loaded", lf.Any("config", cfg))
+	app := &App{
+		config: cfg,
+		logger: logging.NewSLogger(), // todo: inject config
+	}
 
-	gameMap, err := game_map.Generate(cfg.GameMap)
+	return app, nil
+}
+
+func (a *App) Configure() error {
+	gameMap, err := game_map.Generate(a.config.GameMap)
 	if err != nil {
 		return fmt.Errorf("failed to generate game map: %w", err)
 	}
 
-	answerer := httpserver.NewAnswerer(logger, httpserver.AnswerModeJSON)
+	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeJSON)
 
 	tilesChecker := in_memory_tile_checker.New(gameMap.Tiles)
 	countryChecker := in_memory_country_checker.New()
 	mapGetter := in_memory_map_getter.New(gameMap)
 	tilesStorage := in_memory_tile_storage.New()
 
-	router := http.NewServeMux()
+	a.publisher = websocket_publisher.New(tilesStorage.Subscribe(), answerer)
 
-	publisher := websocket_publisher.New(tilesStorage.Subscribe(), answerer)
-	wsRouter := http.NewServeMux()
-	wsRouter.HandleFunc("GET /listen", publisher.Subscribe)
-
-	controller := clicks_controller.New(
+	a.controller = clicks_controller.New(
 		tilesChecker,
 		countryChecker,
 		mapGetter,
@@ -64,12 +68,22 @@ func Run() error {
 		httpserver.JSONReader{},
 	)
 
+	a.declareRoutes()
+
+	return nil
+}
+
+func (a *App) declareRoutes() {
+	router := http.NewServeMux()
+	wsRouter := http.NewServeMux()
+	wsRouter.HandleFunc("GET /listen", a.publisher.Subscribe)
+
 	appRouter := http.NewServeMux()
-	appRouter.HandleFunc("GET /map", controller.GetMap)
-	appRouter.HandleFunc("POST /click", controller.HandleClick)
+	appRouter.HandleFunc("GET /map", a.controller.GetMap)
+	appRouter.HandleFunc("POST /click", a.controller.HandleClick)
 
 	appMiddlewares := httpserver.MiddlewareStack(
-		httpserver.NewLoggingMiddleware(logger),
+		httpserver.NewLoggingMiddleware(a.logger),
 		httpserver.CorsMiddleware,
 	)
 
@@ -78,22 +92,28 @@ func Run() error {
 	)
 
 	router.Handle("/ws/",
-		http.StripPrefix("/ws", wsRouter),
+		http.StripPrefix("/ws", wsRouter), // don't add middleware to websockets, causes errors
 	)
 
-	server := http.Server{
-		Addr:    cfg.HTTPServer.BindAddress,
+	a.server = &http.Server{
+		Addr:    a.config.HTTPServer.BindAddress,
 		Handler: router,
 	}
+}
 
-	logger.Info("Listening",
-		lf.String("address", server.Addr),
+func (a *App) Run() error {
+	defer func() {
+		if r := recover(); r != nil {
+			a.logger.Error("recovered from panic", lf.Any("panic", r))
+		}
+	}()
+
+	a.logger.Info("Listening",
+		lf.String("address", a.server.Addr),
 	)
 
-	go publisher.Run()
-
-	err = server.ListenAndServe()
-	if err != nil {
+	go a.publisher.Run()
+	if err := a.server.ListenAndServe(); err != nil {
 		return fmt.Errorf("failed to serve: %w", err)
 	}
 

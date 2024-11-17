@@ -1,9 +1,30 @@
 package main
 
-import "github.com/raphoester/clickplanet.lol-backend/internal/app"
+import (
+	"fmt"
+
+	"github.com/raphoester/clickplanet.lol-backend/internal/app"
+)
 
 func main() {
-	if err := app.Run(); err != nil {
+	if err := run(); err != nil {
 		panic(err)
 	}
+}
+
+func run() error {
+	app, err := app.New()
+	if err != nil {
+		return fmt.Errorf("failed to create app: %w", err)
+	}
+
+	if err := app.Configure(); err != nil {
+		return fmt.Errorf("failed to configure app: %w", err)
+	}
+
+	if err := app.Run(); err != nil {
+		return fmt.Errorf("failed to run app: %w", err)
+	}
+
+	return nil
 }
