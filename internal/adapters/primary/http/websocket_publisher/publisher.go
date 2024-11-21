@@ -8,13 +8,13 @@ import (
 
 	"github.com/coder/websocket"
 	clicksv1 "github.com/raphoester/clickplanet.lol-backend/generated/proto/clicks/v1"
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
+	"github.com/raphoester/clickplanet.lol-backend/internal/domain"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
 	"google.golang.org/protobuf/proto"
 )
 
 func New(
-	updates <-chan game_map.TileUpdate,
+	updates <-chan domain.TileUpdate,
 	answerer *httpserver.Answerer,
 ) *Publisher {
 	return &Publisher{
@@ -27,7 +27,7 @@ func New(
 type Publisher struct {
 	mu       sync.RWMutex
 	clients  map[*websocket.Conn]struct{}
-	updates  <-chan game_map.TileUpdate
+	updates  <-chan domain.TileUpdate
 	answerer *httpserver.Answerer
 }
 
@@ -37,14 +37,14 @@ func (p *Publisher) Run() {
 			TileId:    update.Tile,
 			CountryId: update.Value,
 		})
-
 		if err != nil {
 			continue
 		}
 
 		p.mu.RLock()
 		for client := range p.clients {
-			_ = client.Write(context.Background(), websocket.MessageText, bin)
+			// TODO: handle disconnects
+			_ = client.Write(context.Background(), websocket.MessageBinary, bin)
 		}
 		p.mu.RUnlock()
 	}
@@ -68,14 +68,4 @@ func (p *Publisher) Subscribe(w http.ResponseWriter, r *http.Request) {
 	p.mu.Lock()
 	p.clients[conn] = struct{}{}
 	p.mu.Unlock()
-
-	// Close the connection when the client disconnects
-	go func() {
-
-		//<-conn.Done()
-		//p.mu.Lock()
-		//delete(p.clients, conn)
-		//p.mu.Unlock()
-		//_ = conn.Close(websocket.StatusNormalClosure, "Connection closed")
-	}()
 }

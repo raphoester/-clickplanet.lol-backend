@@ -1,22 +1,19 @@
 package in_memory_tile_checker
 
-import "github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
-
-func New(tiles []game_map.Tile) *Checker {
-	tilesSet := make(map[string]struct{}, len(tiles))
-	for _, tile := range tiles {
-		tilesSet[tile.ID()] = struct{}{}
-	}
+func New(maxIndex uint32) *Checker {
 	return &Checker{
-		tiles: tilesSet,
+		maxIndex: maxIndex,
 	}
 }
 
 type Checker struct {
-	tiles map[string]struct{}
+	maxIndex uint32
 }
 
-func (c *Checker) CheckTile(tile string) bool {
-	_, ok := c.tiles[tile]
-	return ok
+func (c *Checker) CheckTile(tile uint32) bool {
+	return tile > 0 && tile <= c.maxIndex
+}
+
+func (c *Checker) MaxIndex() uint32 {
+	return c.maxIndex
 }

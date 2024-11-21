@@ -1,25 +1,31 @@
 package in_memory_tile_storage
 
 import (
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
+	"sync"
+
+	"github.com/raphoester/clickplanet.lol-backend/internal/domain"
 )
 
 type Storage struct {
-	tiles       map[string]string
-	subscribers []chan game_map.TileUpdate
+	mu          sync.Mutex
+	tiles       map[uint32]string // might do a slice ?
+	subscribers []chan domain.TileUpdate
 }
 
 func New() *Storage {
 	return &Storage{
-		tiles: make(map[string]string),
+		tiles: make(map[uint32]string),
 	}
 }
 
-func (s *Storage) Set(tile string, value string) {
+func (s *Storage) Set(tile uint32, value string) {
+	s.mu.Lock()
 	s.tiles[tile] = value
+	s.mu.Unlock()
+
 	for _, ch := range s.subscribers {
 		go func() { // handle slow subscribers
-			ch <- game_map.TileUpdate{
+			ch <- domain.TileUpdate{
 				Tile:  tile,
 				Value: value,
 			}
@@ -27,12 +33,12 @@ func (s *Storage) Set(tile string, value string) {
 	}
 }
 
-func (s *Storage) Get() map[string]string {
+func (s *Storage) Get() map[uint32]string {
 	return s.tiles // ownership leak but copying the map would be too expensive
 }
 
-func (s *Storage) Subscribe() <-chan game_map.TileUpdate {
-	ch := make(chan game_map.TileUpdate)
+func (s *Storage) Subscribe() <-chan domain.TileUpdate {
+	ch := make(chan domain.TileUpdate)
 	s.subscribers = append(s.subscribers, ch)
 	return ch
 }

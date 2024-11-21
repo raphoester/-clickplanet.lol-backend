@@ -1,6 +1,4 @@
 httpServer:
-  bindAddress: localhost:8080
+  bindAddress: 0.0.0.0:8080
 gameMap:
-  rowsCount: 100
-  horizontalDensityIndex: 1
-  regionsCount: 10
+  maxIndex: 1004892

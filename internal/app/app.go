@@ -8,10 +8,8 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/http/clicks_controller"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/http/websocket_publisher"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_country_checker"
-	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_map_getter"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_storage"
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain/game_map"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/cfgutil"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
@@ -45,16 +43,10 @@ func New() (*App, error) {
 }
 
 func (a *App) Configure() error {
-	gameMap, err := game_map.Generate(a.config.GameMap)
-	if err != nil {
-		return fmt.Errorf("failed to generate game map: %w", err)
-	}
-
 	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeBinary)
 
-	tilesChecker := in_memory_tile_checker.New(gameMap.Tiles)
+	tilesChecker := in_memory_tile_checker.New(a.config.GameMap.MaxIndex)
 	countryChecker := in_memory_country_checker.New()
-	mapGetter := in_memory_map_getter.New(gameMap)
 	tilesStorage := in_memory_tile_storage.New()
 
 	a.publisher = websocket_publisher.New(tilesStorage.Subscribe(), answerer)
@@ -62,7 +54,6 @@ func (a *App) Configure() error {
 	a.controller = clicks_controller.New(
 		tilesChecker,
 		countryChecker,
-		mapGetter,
 		tilesStorage,
 		answerer,
 		httpserver.ProtoReader{},
@@ -79,7 +70,7 @@ func (a *App) declareRoutes() {
 	wsRouter.HandleFunc("GET /listen", a.publisher.Subscribe)
 
 	appRouter := http.NewServeMux()
-	appRouter.HandleFunc("GET /map", a.controller.GetMap)
+	appRouter.HandleFunc("GET /map-density", a.controller.GetMapDensity)
 	appRouter.HandleFunc("POST /click", a.controller.HandleClick)
 	appRouter.HandleFunc("GET /ownerships", a.controller.GetOwnerships)
 
