@@ -7,6 +7,7 @@ tilesStorage:
   setAndPublishSha1: 469200c5c69b1cfc165040c89b1c1941986d6bca
   redis:
     address: localhost:6379
-    username: root
+    username: default
     password: secret
     db: 0
+    tls: false
