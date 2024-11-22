@@ -15,7 +15,7 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
-	"github.com/redis/go-redis/v9"
+	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/redis_helper"
 )
 
 type App struct {
@@ -46,19 +46,14 @@ func New() (*App, error) {
 
 func (a *App) Configure() error {
 	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeBinary)
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     a.config.Redis.Address,
-		Username: a.config.Redis.Username,
-		Password: a.config.Redis.Password,
-		DB:       a.config.Redis.DB,
-		Protocol: 2,
-		PoolSize: 50,
-	})
+	redisClient, err := redis_helper.NewClient(a.config.TilesStorage.Redis)
+	if err != nil {
+		return fmt.Errorf("failed to create redis client: %w", err)
+	}
 
 	tilesChecker := in_memory_tile_checker.New(a.config.GameMap.MaxIndex)
 	countryChecker := in_memory_country_checker.New()
-	//tilesStorage := in_memory_tile_storage.New()
-	tilesStorage := redis_tile_storage.New(redisClient, a.config.Redis.SetAndPublishSha1)
+	tilesStorage := redis_tile_storage.New(redisClient, a.config.TilesStorage.SetAndPublishSha1)
 
 	updatesCh := tilesStorage.Subscribe(context.Background())
 	a.publisher = websocket_publisher.New(updatesCh, answerer)

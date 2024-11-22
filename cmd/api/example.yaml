@@ -2,10 +2,11 @@ httpServer:
   bindAddress: 0.0.0.0:8080
 gameMap:
   maxIndex: 1004892
-redis:
-  address: localhost:6379
-  username: root
-  password: secret
-  db: 0
+tilesStorage:
   # should be written in /static/setAndPublish.sha1 after devDb is run
   setAndPublishSha1: 469200c5c69b1cfc165040c89b1c1941986d6bca
+  redis:
+    address: localhost:6379
+    username: root
+    password: secret
+    db: 0

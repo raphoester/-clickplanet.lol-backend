@@ -1,9 +1,11 @@
 package app
 
+import "github.com/raphoester/clickplanet.lol-backend/internal/pkg/redis_helper"
+
 type Config struct {
-	HTTPServer HTTPServerConfig
-	GameMap    GameMapConfig
-	Redis      RedisConfig
+	HTTPServer   HTTPServerConfig
+	GameMap      GameMapConfig
+	TilesStorage TilesStorageConfig
 }
 
 type HTTPServerConfig struct {
@@ -14,10 +16,7 @@ type GameMapConfig struct {
 	MaxIndex uint32
 }
 
-type RedisConfig struct {
-	Address           string
-	Username          string
-	Password          string
-	DB                int
+type TilesStorageConfig struct {
+	Redis             redis_helper.Config
 	SetAndPublishSha1 string
 }
