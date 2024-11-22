@@ -13,3 +13,18 @@ dbUp:
 dbDown:
 	@cd ./tools/devdb && \
 		docker-compose down
+
+dBuild:
+	@docker build -t clickplanet:local .
+
+dRun:
+	@docker run \
+		-d \
+		-p 8080:8080 \
+		--name clickplanet \
+		-v ./cmd/api:/home/app/config \
+		clickplanet:local \
+		/home/app/api -config /home/app/config/config.yaml
+
+dRm:
+	@docker rm -f clickplanet

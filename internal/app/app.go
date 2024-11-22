@@ -51,6 +51,7 @@ func (a *App) Configure() error {
 		Password: a.config.Redis.Password,
 		DB:       a.config.Redis.DB,
 		Protocol: 2,
+		PoolSize: 50,
 	})
 
 	tilesChecker := in_memory_tile_checker.New(a.config.GameMap.MaxIndex)
