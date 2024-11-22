@@ -27,4 +27,4 @@ WORKDIR /home/app
 
 COPY --chown=${SYSTEM_USER}:${SYSTEM_USER} --from=build /root/bin/ ./
 
-CMD "./api"
+CMD ["./api"]
