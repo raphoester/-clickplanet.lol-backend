@@ -1,6 +1,7 @@
 package in_memory_tile_storage
 
 import (
+	"context"
 	"sync"
 
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain"
@@ -36,11 +37,11 @@ func (s *Storage) Set(tile uint32, value string) {
 	}
 }
 
-func (s *Storage) Get() map[uint32]string {
-	return s.tiles // ownership leak but copying the map would be too expensive
+func (s *Storage) GetFullState(_ context.Context) (map[uint32]string, error) {
+	return s.tiles, nil // ownership leak but copying the map would be too expensive
 }
 
-func (s *Storage) Subscribe() <-chan domain.TileUpdate {
+func (s *Storage) Subscribe(_ context.Context) <-chan domain.TileUpdate {
 	ch := make(chan domain.TileUpdate)
 	s.subsMu.Lock()
 	s.subscribers = append(s.subscribers, ch)

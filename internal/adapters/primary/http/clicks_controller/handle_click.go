@@ -36,6 +36,11 @@ func (c *Controller) HandleClick(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c.tilesStorage.Set(req.GetTileId(), req.GetCountryId())
+	if err := c.tilesStorage.Set(r.Context(), req.GetTileId(), req.GetCountryId()); err != nil {
+		c.answerer.Err(w, fmt.Errorf("failed to set tile: %w", err),
+			"internal error", http.StatusInternalServerError)
+		return
+	}
+
 	c.answerer.Empty(w)
 }

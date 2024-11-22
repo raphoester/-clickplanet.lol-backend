@@ -1,0 +1,8 @@
+services:
+  redis:
+    image: redis:7.4.1-alpine3.20
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../../static:/static
+    container_name: clickPlanet-redis

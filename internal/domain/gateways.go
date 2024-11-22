@@ -1,17 +1,19 @@
 package domain
 
+import "context"
+
 type TilesChecker interface {
 	CheckTile(tile uint32) bool
 	MaxIndex() uint32
 }
 
 type TileStorage interface {
-	Set(tile uint32, value string)
-	Get() map[uint32]string
+	Set(ctx context.Context, tile uint32, value string) error
+	GetFullState(ctx context.Context) (map[uint32]string, error)
 }
 
 type TileReporter interface {
-	Subscribe() <-chan TileUpdate
+	Subscribe(ctx context.Context) <-chan TileUpdate
 }
 
 type CountryChecker interface {

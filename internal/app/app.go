@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
@@ -9,11 +10,12 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/http/websocket_publisher"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_country_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_checker"
-	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_storage"
+	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/redis_tile_storage"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/cfgutil"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
+	"github.com/redis/go-redis/v9"
 )
 
 type App struct {
@@ -44,13 +46,20 @@ func New() (*App, error) {
 
 func (a *App) Configure() error {
 	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeBinary)
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     a.config.Redis.Addr,
+		Password: a.config.Redis.Password,
+		DB:       a.config.Redis.DB,
+		Protocol: 2,
+	})
 
 	tilesChecker := in_memory_tile_checker.New(a.config.GameMap.MaxIndex)
 	countryChecker := in_memory_country_checker.New()
-	tilesStorage := in_memory_tile_storage.New()
+	//tilesStorage := in_memory_tile_storage.New()
+	tilesStorage := redis_tile_storage.New(redisClient, a.config.Redis.SetAndPublishSha1)
 
-	a.publisher = websocket_publisher.New(tilesStorage.Subscribe(), answerer)
-
+	updatesCh := tilesStorage.Subscribe(context.Background())
+	a.publisher = websocket_publisher.New(updatesCh, answerer)
 	a.controller = clicks_controller.New(
 		tilesChecker,
 		countryChecker,
