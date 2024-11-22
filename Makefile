@@ -15,7 +15,7 @@ dbDown:
 		docker-compose down
 
 dBuild:
-	@docker build -t clickplanet:local .
+	@docker build -t clickplanet-back:local .
 
 dRun:
 	@docker run \
@@ -23,7 +23,7 @@ dRun:
 		-p 8080:8080 \
 		--name clickplanet \
 		-v ./cmd/api:/home/app/config \
-		clickplanet:local \
+		clickplanet-back:local \
 		/home/app/api -config /home/app/config/config.yaml
 
 dRm:
