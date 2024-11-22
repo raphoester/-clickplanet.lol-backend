@@ -47,7 +47,8 @@ func New() (*App, error) {
 func (a *App) Configure() error {
 	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeBinary)
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     a.config.Redis.Addr,
+		Addr:     a.config.Redis.Address,
+		Username: a.config.Redis.Username,
 		Password: a.config.Redis.Password,
 		DB:       a.config.Redis.DB,
 		Protocol: 2,

@@ -4,6 +4,7 @@ gameMap:
   maxIndex: 1004892
 redis:
   address: localhost:6379
+  username: root
   password: secret
   db: 0
   # should be written in /static/setAndPublish.sha1 after devDb is run

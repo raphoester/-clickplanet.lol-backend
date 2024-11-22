@@ -15,7 +15,8 @@ type GameMapConfig struct {
 }
 
 type RedisConfig struct {
-	Addr              string
+	Address           string
+	Username          string
 	Password          string
 	DB                int
 	SetAndPublishSha1 string
