@@ -7,8 +7,9 @@ import (
 )
 
 type Storage struct {
-	mu          sync.Mutex
+	tilesMu     sync.Mutex
 	tiles       map[uint32]string // might do a slice ?
+	subsMu      sync.Mutex
 	subscribers []chan domain.TileUpdate
 }
 
@@ -19,10 +20,12 @@ func New() *Storage {
 }
 
 func (s *Storage) Set(tile uint32, value string) {
-	s.mu.Lock()
+	s.tilesMu.Lock()
 	s.tiles[tile] = value
-	s.mu.Unlock()
+	s.tilesMu.Unlock()
 
+	s.subsMu.Lock()
+	defer s.subsMu.Unlock()
 	for _, ch := range s.subscribers {
 		go func() { // handle slow subscribers
 			ch <- domain.TileUpdate{
@@ -39,6 +42,8 @@ func (s *Storage) Get() map[uint32]string {
 
 func (s *Storage) Subscribe() <-chan domain.TileUpdate {
 	ch := make(chan domain.TileUpdate)
+	s.subsMu.Lock()
 	s.subscribers = append(s.subscribers, ch)
+	s.subsMu.Unlock()
 	return ch
 }
