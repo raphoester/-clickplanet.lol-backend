@@ -90,8 +90,8 @@ func (a *App) declareRoutes() {
 		httpserver.CorsMiddleware,
 	)
 
-	router.Handle("/app/",
-		http.StripPrefix("/app", appMiddlewares(appRouter)),
+	router.Handle("/api/",
+		http.StripPrefix("/api", appMiddlewares(appRouter)),
 	)
 
 	router.Handle("/ws/",
