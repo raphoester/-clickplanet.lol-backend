@@ -44,24 +44,42 @@ func (s *Storage) Set(ctx context.Context, tile uint32, value string) error {
 
 func (s *Storage) GetFullState(ctx context.Context) (map[uint32]string, error) {
 	iter := s.redis.Scan(ctx, 0, "*", 0).Iterator()
-	retMap := make(map[uint32]string)
+
+	keys := make([]string, 0, 100_000)
 	for iter.Next(ctx) {
-		tile, err := strconv.ParseUint(iter.Val(), 10, 32)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse tileId to int: %w", err)
-		}
-
-		// meh
-		value, err := s.redis.Get(ctx, iter.Val()).Result()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get tile value: %w", err)
-		}
-
-		retMap[uint32(tile)] = value
+		keys = append(keys, iter.Val())
 	}
 
 	if err := iter.Err(); err != nil {
-		return nil, fmt.Errorf("failed to scan tiles: %w", err)
+		return nil, fmt.Errorf("failed to scan keys: %w", err)
+	}
+
+	retMap := make(map[uint32]string, len(keys))
+	batchSize := 100
+	for i := 0; i < len(keys); i += batchSize {
+		end := i + batchSize
+		if end > len(keys) {
+			end = len(keys)
+		}
+
+		batchKeys := keys[i:end]
+		values, err := s.redis.MGet(ctx, batchKeys...).Result()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get tile values: %w", err)
+		}
+
+		for j, key := range batchKeys {
+			if values[j] == nil {
+				continue
+			}
+
+			tile, err := strconv.ParseUint(key, 10, 32)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse tileId to int: %w", err)
+			}
+
+			retMap[uint32(tile)] = values[j].(string)
+		}
 	}
 
 	return retMap, nil
