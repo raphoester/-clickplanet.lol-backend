@@ -81,7 +81,7 @@ func (a *App) declareRoutes() {
 	appRouter.HandleFunc("GET /map-density", a.controller.GetMapDensity)
 	appRouter.HandleFunc("POST /click", a.controller.HandleClick)
 	appRouter.HandleFunc("GET /ownerships", a.controller.GetOwnerships)
-	appRouter.HandleFunc("GET /ownerships-by-batch", a.controller.GetOwnershipsByBatch)
+	appRouter.HandleFunc("POST /ownerships-by-batch", a.controller.GetOwnershipsByBatch)
 
 	appMiddlewares := httpserver.MiddlewareStack(
 		httpserver.NewLoggingMiddleware(a.logger),
