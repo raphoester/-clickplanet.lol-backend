@@ -18,13 +18,17 @@ func (c *Controller) GetOwnershipsByBatch(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	endTileId := req.GetEndTileId()
+	if c.tilesChecker.MaxIndex() < endTileId {
+		endTileId = c.tilesChecker.MaxIndex()
+	}
+
 	if !c.tilesChecker.CheckTile(req.GetStartTileId()) ||
-		!c.tilesChecker.CheckTile(req.GetEndTileId()) ||
-		req.GetStartTileId() > req.GetEndTileId() ||
-		req.GetEndTileId()-req.GetStartTileId() > 5000 {
+		req.GetStartTileId() > endTileId ||
+		endTileId-req.GetStartTileId() > 5000 {
 
 		c.answerer.Err(w,
-			fmt.Errorf("invalid tile range %d %d", req.GetStartTileId(), req.GetEndTileId()),
+			fmt.Errorf("invalid tile range %d %d", req.GetStartTileId(), endTileId),
 			"invalid tile", http.StatusBadRequest,
 		)
 		return
