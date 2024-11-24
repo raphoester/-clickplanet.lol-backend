@@ -55,7 +55,7 @@ func (s *Storage) GetFullState(ctx context.Context) (map[uint32]string, error) {
 	}
 
 	retMap := make(map[uint32]string, len(keys))
-	batchSize := 100
+	batchSize := 5000
 	for i := 0; i < len(keys); i += batchSize {
 		end := i + batchSize
 		if end > len(keys) {
