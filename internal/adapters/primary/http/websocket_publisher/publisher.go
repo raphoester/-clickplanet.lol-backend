@@ -37,10 +37,14 @@ type clientMD struct {
 
 func (p *Publisher) Run() {
 	for update := range p.updates {
+		fmt.Printf("update: %+v\n", update)
+
 		bin, err := proto.Marshal(&clicksv1.TileUpdate{
-			TileId:    update.Tile,
-			CountryId: update.Value,
+			TileId:            update.Tile,
+			CountryId:         update.Value,
+			PreviousCountryId: update.Previous,
 		})
+
 		if err != nil {
 			continue
 		}

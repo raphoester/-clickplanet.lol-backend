@@ -22,6 +22,7 @@ func New() *Storage {
 
 func (s *Storage) Set(tile uint32, value string) {
 	s.tilesMu.Lock()
+	previous := s.tiles[tile]
 	s.tiles[tile] = value
 	s.tilesMu.Unlock()
 
@@ -30,8 +31,9 @@ func (s *Storage) Set(tile uint32, value string) {
 	for _, ch := range s.subscribers {
 		go func() { // handle slow subscribers
 			ch <- domain.TileUpdate{
-				Tile:  tile,
-				Value: value,
+				Tile:     tile,
+				Value:    value,
+				Previous: previous,
 			}
 		}()
 	}

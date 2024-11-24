@@ -75,7 +75,10 @@ func (s *Storage) Subscribe(ctx context.Context) <-chan domain.TileUpdate {
 		defer func() { _ = pubSub.Close() }()
 
 		for msg := range pubSub.Channel() {
-			payload := make(map[string]string, 1)
+			payload := make(map[string]struct {
+				OldValue string `json:"o"`
+				NewValue string `json:"n"`
+			}, 1)
 			if err := json.Unmarshal([]byte(msg.Payload), &payload); err != nil {
 				continue
 			}
@@ -87,8 +90,9 @@ func (s *Storage) Subscribe(ctx context.Context) <-chan domain.TileUpdate {
 				}
 
 				ch <- domain.TileUpdate{
-					Tile:  uint32(tileId),
-					Value: value,
+					Tile:     uint32(tileId),
+					Value:    value.NewValue,
+					Previous: value.OldValue,
 				}
 			}
 		}
