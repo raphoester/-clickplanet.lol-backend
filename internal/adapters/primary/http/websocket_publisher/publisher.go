@@ -32,7 +32,6 @@ type Publisher struct {
 }
 
 type clientMD struct {
-	consecutiveErrors int
 }
 
 func (p *Publisher) Run() {
@@ -50,17 +49,10 @@ func (p *Publisher) Run() {
 		}
 
 		p.mu.RLock()
-		for client, md := range p.clients {
+		for client := range p.clients {
 			err := client.Write(context.Background(), websocket.MessageBinary, bin)
 			if err == nil {
-				md.consecutiveErrors = 0
 				continue
-			}
-
-			md.consecutiveErrors++
-			if md.consecutiveErrors > 5 {
-				_ = client.Close(websocket.StatusInternalError, "too many consecutive errors")
-				delete(p.clients, client)
 			}
 		}
 		p.mu.RUnlock()
