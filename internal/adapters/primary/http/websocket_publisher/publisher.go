@@ -18,7 +18,7 @@ func New(
 	answerer *httpserver.Answerer,
 ) *Publisher {
 	return &Publisher{
-		clients:  make(map[*websocket.Conn]struct{}),
+		clients:  make(map[*websocket.Conn]*clientMD),
 		updates:  updates,
 		answerer: answerer,
 	}
@@ -26,9 +26,13 @@ func New(
 
 type Publisher struct {
 	mu       sync.RWMutex
-	clients  map[*websocket.Conn]struct{}
+	clients  map[*websocket.Conn]*clientMD
 	updates  <-chan domain.TileUpdate
 	answerer *httpserver.Answerer
+}
+
+type clientMD struct {
+	consecutiveErrors int
 }
 
 func (p *Publisher) Run() {
@@ -42,9 +46,18 @@ func (p *Publisher) Run() {
 		}
 
 		p.mu.RLock()
-		for client := range p.clients {
-			// TODO: handle disconnects
-			_ = client.Write(context.Background(), websocket.MessageBinary, bin)
+		for client, md := range p.clients {
+			err := client.Write(context.Background(), websocket.MessageBinary, bin)
+			if err == nil {
+				md.consecutiveErrors = 0
+				continue
+			}
+
+			md.consecutiveErrors++
+			if md.consecutiveErrors > 5 {
+				_ = client.Close(websocket.StatusInternalError, "too many consecutive errors")
+				delete(p.clients, client)
+			}
 		}
 		p.mu.RUnlock()
 	}
@@ -66,6 +79,6 @@ func (p *Publisher) Subscribe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p.mu.Lock()
-	p.clients[conn] = struct{}{}
+	p.clients[conn] = &clientMD{}
 	p.mu.Unlock()
 }
