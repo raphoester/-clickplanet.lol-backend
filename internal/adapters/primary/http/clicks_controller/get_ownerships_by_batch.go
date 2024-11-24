@@ -24,8 +24,7 @@ func (c *Controller) GetOwnershipsByBatch(w http.ResponseWriter, r *http.Request
 	}
 
 	if !c.tilesChecker.CheckTile(req.GetStartTileId()) ||
-		req.GetStartTileId() > endTileId ||
-		endTileId-req.GetStartTileId() > 5000 {
+		req.GetStartTileId() > endTileId {
 
 		c.answerer.Err(w,
 			fmt.Errorf("invalid tile range %d %d", req.GetStartTileId(), endTileId),
