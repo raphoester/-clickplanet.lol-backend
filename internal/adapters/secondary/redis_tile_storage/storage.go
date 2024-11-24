@@ -42,6 +42,34 @@ func (s *Storage) Set(ctx context.Context, tile uint32, value string) error {
 	return nil
 }
 
+func (s *Storage) GetStateBatch(ctx context.Context, start uint32, end uint32) (map[uint32]string, error) {
+	keys := make([]string, 0, end-start+1)
+	for i := start; i <= end; i++ {
+		keys = append(keys, strconv.FormatUint(uint64(i), 10))
+	}
+
+	values, err := s.redis.MGet(ctx, keys...).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tile values: %w", err)
+	}
+
+	retMap := make(map[uint32]string, len(values))
+	for i, key := range keys {
+		if values[i] == nil {
+			continue
+		}
+
+		tile, err := strconv.ParseUint(key, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse tileId to int: %w", err)
+		}
+
+		retMap[uint32(tile)] = values[i].(string)
+	}
+
+	return retMap, nil
+}
+
 func (s *Storage) GetFullState(ctx context.Context) (map[uint32]string, error) {
 	iter := s.redis.Scan(ctx, 0, "*", 0).Iterator()
 

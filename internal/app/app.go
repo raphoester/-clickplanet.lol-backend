@@ -47,7 +47,7 @@ func New() (*App, error) {
 }
 
 func (a *App) Configure() error {
-	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeBinary)
+	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeJSON)
 	redisClient, err := redis_helper.NewClient(a.config.TilesStorage.Redis)
 	if err != nil {
 		return fmt.Errorf("failed to create redis client: %w", err)
@@ -64,7 +64,7 @@ func (a *App) Configure() error {
 		countryChecker,
 		tilesStorage,
 		answerer,
-		httpserver.ProtoReader{},
+		httpserver.JSONReader{},
 	)
 
 	a.declareRoutes()
@@ -81,6 +81,7 @@ func (a *App) declareRoutes() {
 	appRouter.HandleFunc("GET /map-density", a.controller.GetMapDensity)
 	appRouter.HandleFunc("POST /click", a.controller.HandleClick)
 	appRouter.HandleFunc("GET /ownerships", a.controller.GetOwnerships)
+	appRouter.HandleFunc("GET /ownerships-by-batch", a.controller.GetOwnershipsByBatch)
 
 	appMiddlewares := httpserver.MiddlewareStack(
 		httpserver.NewLoggingMiddleware(a.logger),
