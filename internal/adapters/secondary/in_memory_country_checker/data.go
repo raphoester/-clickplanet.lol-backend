@@ -70,7 +70,6 @@ var countries = map[string]struct{}{
 	"er":     {},
 	"es":     {},
 	"et":     {},
-	"eu":     {},
 	"fi":     {},
 	"fj":     {},
 	"fk":     {},

@@ -63,7 +63,6 @@ func (a *Answerer) Data(w http.ResponseWriter, protoMsg proto.Message) {
 }
 
 func answerBinary(a *Answerer, w http.ResponseWriter, protoMsg proto.Message) {
-	w.WriteHeader(http.StatusOK)
 	protoBytes, err := proto.Marshal(protoMsg)
 	if err != nil {
 		a.Err(w, fmt.Errorf("failed marshalling proto msg: %w", err),
@@ -78,7 +77,6 @@ func answerBinary(a *Answerer, w http.ResponseWriter, protoMsg proto.Message) {
 }
 
 func answerJSON(a *Answerer, w http.ResponseWriter, protoMsg proto.Message) {
-	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(protoMsg); err != nil {
 		a.Err(w, fmt.Errorf("failed to encode json: %w", err),
 			"internal error", http.StatusInternalServerError)
