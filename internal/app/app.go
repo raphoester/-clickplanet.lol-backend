@@ -41,6 +41,8 @@ func New() (*App, error) {
 		logger: logging.NewSLogger(), // todo: inject config
 	}
 
+	app.logger.Debug("config", lf.Any("config", cfg))
+
 	return app, nil
 }
 

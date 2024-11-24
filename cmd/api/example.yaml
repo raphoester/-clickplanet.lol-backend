@@ -4,7 +4,7 @@ gameMap:
   maxIndex: 1004892
 tilesStorage:
   # should be written in /static/setAndPublish.sha1 after devDb is run
-  setAndPublishSha1: 469200c5c69b1cfc165040c89b1c1941986d6bca
+  setAndPublishSha1: "000fe99a1304b71998a6e3734ef6c635d7b7f7d5"
   redis:
     address: localhost:6379
     username: default
