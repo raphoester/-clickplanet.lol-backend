@@ -11,7 +11,7 @@ type Checker struct {
 }
 
 func (c *Checker) CheckTile(tile uint32) bool {
-	return tile > 0 && tile <= c.maxIndex
+	return tile <= c.maxIndex // uint32 is always >= 0
 }
 
 func (c *Checker) MaxIndex() uint32 {

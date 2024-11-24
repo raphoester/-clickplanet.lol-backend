@@ -47,7 +47,7 @@ func New() (*App, error) {
 }
 
 func (a *App) Configure() error {
-	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeJSON)
+	answerer := httpserver.NewAnswerer(a.logger, httpserver.AnswerModeBinary)
 	redisClient, err := redis_helper.NewClient(a.config.TilesStorage.Redis)
 	if err != nil {
 		return fmt.Errorf("failed to create redis client: %w", err)
@@ -64,7 +64,7 @@ func (a *App) Configure() error {
 		countryChecker,
 		tilesStorage,
 		answerer,
-		httpserver.JSONReader{},
+		httpserver.ProtoReader{},
 	)
 
 	a.declareRoutes()
