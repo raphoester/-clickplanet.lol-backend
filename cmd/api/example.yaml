@@ -1,5 +1,6 @@
 httpServer:
   bindAddress: 0.0.0.0:8080
+  format: json # or binary
 gameMap:
   maxIndex: 1004892
 tilesStorage:

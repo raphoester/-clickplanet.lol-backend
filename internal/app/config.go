@@ -10,6 +10,7 @@ type Config struct {
 
 type HTTPServerConfig struct {
 	BindAddress string
+	Format      string
 }
 
 type GameMapConfig struct {

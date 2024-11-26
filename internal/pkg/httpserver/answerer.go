@@ -10,19 +10,40 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type AnswerMode int
+func FormatFromString(format string) Format {
+	ret := FormatBinary
+	if format == "json" {
+		ret = FormatJSON
+	}
+
+	return ret
+}
+
+type Format int
+
+func (a Format) Build(
+	logger logging.Logger,
+) (*Answerer, Reader) {
+	answerer := NewAnswerer(logger, a)
+	var reader Reader = ProtoReader{}
+	if a == FormatJSON {
+		reader = JSONReader{}
+	}
+
+	return answerer, reader
+}
 
 const (
-	AnswerModeBinary AnswerMode = iota
-	AnswerModeJSON
+	FormatBinary Format = iota
+	FormatJSON
 )
 
 func NewAnswerer(
 	logger logging.Logger,
-	mode AnswerMode,
+	mode Format,
 ) *Answerer {
 	answerMsg := answerJSON
-	if mode == AnswerModeBinary {
+	if mode == FormatBinary {
 		answerMsg = answerBinary
 	}
 
@@ -35,7 +56,7 @@ func NewAnswerer(
 
 type Answerer struct {
 	logger    logging.Logger
-	mode      AnswerMode
+	mode      Format
 	answerMsg func(a *Answerer, w http.ResponseWriter, protoMsg proto.Message)
 }
 
