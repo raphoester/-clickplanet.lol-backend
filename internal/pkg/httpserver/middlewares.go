@@ -1,7 +1,6 @@
 package httpserver
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/ctxutil"
