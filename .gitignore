@@ -3,3 +3,5 @@
 .env
 
 cmd/api/config.yaml
+
+tools/monitoring/prometheus.yaml
