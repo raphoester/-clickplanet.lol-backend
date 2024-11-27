@@ -13,6 +13,3 @@ services:
       - "3000:3000"
     volumes:
       - /var/lib/grafana:/var/lib/grafana
-
-
-

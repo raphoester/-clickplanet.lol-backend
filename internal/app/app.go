@@ -105,6 +105,7 @@ func (a *App) declareRoutes() {
 
 	appMiddlewares := httpserver.MiddlewareStack(
 		httpserver.NewLoggingMiddleware(a.logger),
+		httpserver.IPReaderMiddleware,
 		httpserver.CorsMiddleware,
 	)
 

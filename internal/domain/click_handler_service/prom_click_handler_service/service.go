@@ -50,8 +50,6 @@ func (s *Service) HandleClick(ctx context.Context, tileId uint32, countryID stri
 		err = fmt.Errorf("failed to handle click: %w", err)
 	}
 
-	fmt.Println("sourceIp: ", sourceIp, "countryID: ", countryID, "status: ", status)
-
 	s.histogram.WithLabelValues(
 		sourceIp,
 		countryID,
