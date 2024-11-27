@@ -2,22 +2,23 @@ package clicks_controller
 
 import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/domain"
+	"github.com/raphoester/clickplanet.lol-backend/internal/domain/click_handler_service"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
 )
 
 func New(
+	clickHandlerService click_handler_service.IService,
 	tilesChecker domain.TilesChecker,
-	countryChecker domain.CountryChecker,
 	tilesStorage domain.TileStorage,
 	answerer *httpserver.Answerer,
 	reader httpserver.Reader,
 ) *Controller {
 	return &Controller{
-		answerer:       answerer,
-		reader:         reader,
-		tilesChecker:   tilesChecker,
-		countryChecker: countryChecker,
-		tilesStorage:   tilesStorage,
+		answerer:            answerer,
+		reader:              reader,
+		clickHandlerService: clickHandlerService,
+		tilesChecker:        tilesChecker,
+		tilesStorage:        tilesStorage,
 	}
 }
 
@@ -25,7 +26,7 @@ type Controller struct {
 	answerer *httpserver.Answerer
 	reader   httpserver.Reader
 
-	tilesChecker   domain.TilesChecker
-	countryChecker domain.CountryChecker
-	tilesStorage   domain.TileStorage
+	clickHandlerService click_handler_service.IService
+	tilesChecker        domain.TilesChecker
+	tilesStorage        domain.TileStorage
 }

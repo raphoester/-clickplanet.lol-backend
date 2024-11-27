@@ -3,6 +3,7 @@ package httpserver
 import (
 	"net/http"
 
+	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/ctxutil"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
 )
@@ -28,6 +29,20 @@ func CorsMiddleware(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func IPReaderMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip := r.Header.Get("X-Forwarded-For")
+		if ip == "" {
+			ip = r.Header.Get("X-Real-IP")
+		}
+		if ip == "" {
+			ip = r.RemoteAddr
+		}
+		ctx := ctxutil.AddIPToContext(r.Context(), ip)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

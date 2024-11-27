@@ -6,15 +6,19 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/http/clicks_controller"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/primary/http/websocket_publisher"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_country_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/in_memory_tile_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/adapters/secondary/redis_tile_storage"
+	"github.com/raphoester/clickplanet.lol-backend/internal/domain/click_handler_service"
+	"github.com/raphoester/clickplanet.lol-backend/internal/domain/click_handler_service/prom_click_handler_service"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/cfgutil"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
+	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/prom"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/redis_helper"
 )
 
@@ -23,8 +27,9 @@ type App struct {
 	logger logging.Logger
 	server *http.Server
 
-	publisher  *websocket_publisher.Publisher
-	controller *clicks_controller.Controller
+	publisher    *websocket_publisher.Publisher
+	controller   *clicks_controller.Controller
+	promRegistry *prometheus.Registry
 }
 
 func New() (*App, error) {
@@ -55,22 +60,35 @@ func (a *App) Configure() error {
 		return fmt.Errorf("failed to create redis client: %w", err)
 	}
 
+	promRegistry := prom.NewRegistry()
+	a.promRegistry = promRegistry
+
 	tilesChecker := in_memory_tile_checker.New(a.config.GameMap.MaxIndex)
 	countryChecker := in_memory_country_checker.New()
 	tilesStorage := redis_tile_storage.New(redisClient, a.config.TilesStorage.SetAndPublishSha1)
 
+	var clickHandlerService click_handler_service.IService = click_handler_service.New(
+		tilesChecker,
+		tilesStorage,
+		countryChecker,
+	)
+
+	clickHandlerService, err = prom_click_handler_service.New(clickHandlerService, promRegistry)
+	if err != nil {
+		return fmt.Errorf("failed to create prometheus click handler service: %w", err)
+	}
+
 	updatesCh := tilesStorage.Subscribe(context.Background())
 	a.publisher = websocket_publisher.New(updatesCh, answerer)
 	a.controller = clicks_controller.New(
+		clickHandlerService,
 		tilesChecker,
-		countryChecker,
 		tilesStorage,
 		answerer,
 		reader,
 	)
 
 	a.declareRoutes()
-
 	return nil
 }
 
@@ -98,6 +116,13 @@ func (a *App) declareRoutes() {
 		http.StripPrefix("/ws", wsRouter), // don't add middleware to websockets, causes errors
 	)
 
+	loggingMiddlewareStack := httpserver.MiddlewareStack(
+		httpserver.NewLoggingMiddleware(a.logger),
+		httpserver.IPReaderMiddleware,
+	)
+	promHandler := loggingMiddlewareStack(prom.HandlerForRegistry(a.promRegistry))
+
+	router.HandleFunc("/metrics", promHandler.ServeHTTP)
 	a.server = &http.Server{
 		Addr:    a.config.HTTPServer.BindAddress,
 		Handler: router,
