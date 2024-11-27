@@ -1,8 +1,6 @@
 services:
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: clickplanet-back:local
     ports:
       - "8080:8080"
     volumes:
