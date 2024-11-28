@@ -6,10 +6,15 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
   grafana:
     container_name: grafana
     image: grafana/grafana:11.3.1
     ports:
       - "3000:3000"
     volumes:
-      - /var/lib/grafana:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
