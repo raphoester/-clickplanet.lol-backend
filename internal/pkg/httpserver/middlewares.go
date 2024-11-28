@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/ctxutil"
 	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
@@ -34,6 +35,7 @@ func CorsMiddleware(next http.Handler) http.Handler {
 
 func IPReaderMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
 		ip := r.Header.Get("X-Forwarded-For")
 		if ip == "" {
 			ip = r.Header.Get("X-Real-IP")
@@ -41,6 +43,16 @@ func IPReaderMiddleware(next http.Handler) http.Handler {
 		if ip == "" {
 			ip = r.RemoteAddr
 		}
+
+		split := strings.Split(ip, ",")
+		if len(split) > 1 {
+			ip = strings.Trim(split[0], " ")
+		}
+
+		if ip == "" {
+			ip = "unknown"
+		}
+
 		ctx := ctxutil.AddIPToContext(r.Context(), ip)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

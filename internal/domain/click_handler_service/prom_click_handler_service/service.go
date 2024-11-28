@@ -39,10 +39,6 @@ type Service struct {
 
 func (s *Service) HandleClick(ctx context.Context, tileId uint32, countryID string) error {
 	sourceIp := ctxutil.GetSourceIP(ctx)
-	if sourceIp == "" {
-		sourceIp = "unknown"
-	}
-
 	status := "ok"
 	err := s.implementation.HandleClick(ctx, tileId, countryID)
 	if err != nil {
