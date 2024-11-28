@@ -249,6 +249,7 @@ var countries = map[string]struct{}{
 	"vu":     {},
 	"wf":     {},
 	"ws":     {},
+	"xb":     {}, // custom: brittany (bretagne)
 	"xk":     {},
 	"ye":     {},
 	"yt":     {},
