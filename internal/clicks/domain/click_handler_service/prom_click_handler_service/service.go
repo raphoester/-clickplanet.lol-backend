@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain/click_handler_service"
-	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/ctxutil"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain/click_handler_service"
+	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/ctxutil"
 )
 
 func New(

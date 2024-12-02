@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/raphoester/clickplanet.lol-backend/internal/app"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/app"
 )
 
 func main() {

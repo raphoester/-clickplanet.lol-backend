@@ -1,9 +1,9 @@
 package clicks_controller
 
 import (
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain"
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain/click_handler_service"
-	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain/click_handler_service"
+	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/httpserver"
 )
 
 func New(

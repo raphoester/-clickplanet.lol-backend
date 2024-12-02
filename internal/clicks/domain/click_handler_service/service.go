@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain"
 )
 
 func New(

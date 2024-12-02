@@ -1,6 +1,6 @@
 package logging
 
-import "github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
+import "github.com/raphoester/clickplanet.lol-backend/internal/kernel/logging/lf"
 
 type Logger interface {
 	Debug(message string, fields ...lf.Field)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain"
 )
 
 type Storage struct {

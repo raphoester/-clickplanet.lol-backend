@@ -1,6 +1,6 @@
 package app
 
-import "github.com/raphoester/clickplanet.lol-backend/internal/pkg/redis_helper"
+import "github.com/raphoester/clickplanet.lol-backend/internal/kernel/redis_helper"
 
 type Config struct {
 	HTTPServer   HTTPServerConfig

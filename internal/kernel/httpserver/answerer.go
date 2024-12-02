@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
-	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
+	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/logging"
+	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/logging/lf"
 	"google.golang.org/protobuf/proto"
 )
 

@@ -3,9 +3,9 @@ package httpserver
 import (
 	"net/http"
 
-	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/ctxutil"
-	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging"
-	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/logging/lf"
+	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/ctxutil"
+	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/logging"
+	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/logging/lf"
 )
 
 func MiddlewareStack(middlewares ...func(http.Handler) http.Handler) func(http.Handler) http.Handler {

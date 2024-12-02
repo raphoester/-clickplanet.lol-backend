@@ -8,8 +8,8 @@ import (
 
 	"github.com/coder/websocket"
 	clicksv1 "github.com/raphoester/clickplanet.lol-backend/generated/proto/clicks/v1"
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain"
-	"github.com/raphoester/clickplanet.lol-backend/internal/pkg/httpserver"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain"
+	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/httpserver"
 	"google.golang.org/protobuf/proto"
 )
 

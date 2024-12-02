@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/raphoester/clickplanet.lol-backend/internal/domain"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain"
 	"github.com/redis/go-redis/v9"
 )
 
