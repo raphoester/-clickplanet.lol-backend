@@ -113,36 +113,45 @@ func (s *Storage) GetFullState(ctx context.Context) (map[uint32]string, error) {
 	return retMap, nil
 }
 
-func (s *Storage) Subscribe(ctx context.Context) <-chan domain.TileUpdate {
+func (s *Storage) Subscribe(ctx context.Context) (<-chan domain.TileUpdate, error) {
 	ch := make(chan domain.TileUpdate)
+	pubSub := s.redis.Subscribe(ctx, channel)
 
 	go func() {
-		pubSub := s.redis.Subscribe(ctx, channel)
-		defer func() { _ = pubSub.Close() }()
+		defer func() {
+			close(ch)
+			_ = pubSub.Close()
+		}()
 
-		for msg := range pubSub.Channel() {
-			payload := make(map[string]struct {
-				OldValue string `json:"o"`
-				NewValue string `json:"n"`
-			}, 1)
-			if err := json.Unmarshal([]byte(msg.Payload), &payload); err != nil {
-				continue
-			}
-
-			for tile, value := range payload { // there should be only one key
-				tileId, err := strconv.ParseUint(tile, 10, 32)
-				if err != nil {
+		rcv := pubSub.Channel()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case msg := <-rcv:
+				payload := make(map[string]struct {
+					OldValue string `json:"o"`
+					NewValue string `json:"n"`
+				}, 1)
+				if err := json.Unmarshal([]byte(msg.Payload), &payload); err != nil {
 					continue
 				}
 
-				ch <- domain.TileUpdate{
-					Tile:     uint32(tileId),
-					Value:    value.NewValue,
-					Previous: value.OldValue,
+				for tile, value := range payload { // there should be only one key
+					tileId, err := strconv.ParseUint(tile, 10, 32)
+					if err != nil {
+						continue
+					}
+
+					ch <- domain.TileUpdate{
+						Tile:     uint32(tileId),
+						Value:    value.NewValue,
+						Previous: value.OldValue,
+					}
 				}
 			}
 		}
 	}()
 
-	return ch
+	return ch, nil
 }

@@ -1,4 +1,4 @@
-package redis_helper
+package xredis
 
 import (
 	"context"

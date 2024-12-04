@@ -1,6 +1,6 @@
 package app
 
-import "github.com/raphoester/clickplanet.lol-backend/internal/kernel/redis_helper"
+import "github.com/raphoester/clickplanet.lol-backend/internal/kernel/xredis"
 
 type Config struct {
 	HTTPServer   HTTPServerConfig
@@ -18,6 +18,6 @@ type GameMapConfig struct {
 }
 
 type TilesStorageConfig struct {
-	Redis             redis_helper.Config
+	Redis             xredis.Config
 	SetAndPublishSha1 string
 }

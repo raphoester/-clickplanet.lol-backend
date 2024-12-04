@@ -19,7 +19,7 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/logging"
 	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/logging/lf"
 	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/prom"
-	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/redis_helper"
+	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/xredis"
 )
 
 type App struct {
@@ -55,7 +55,7 @@ func (a *App) Configure() error {
 	format := httpserver.FormatFromString(a.config.HTTPServer.Format)
 	answerer, reader := format.Build(a.logger)
 
-	redisClient, err := redis_helper.NewClient(a.config.TilesStorage.Redis)
+	redisClient, err := xredis.NewClient(a.config.TilesStorage.Redis)
 	if err != nil {
 		return fmt.Errorf("failed to create redis client: %w", err)
 	}
@@ -78,7 +78,10 @@ func (a *App) Configure() error {
 		return fmt.Errorf("failed to create prometheus click handler service: %w", err)
 	}
 
-	updatesCh := tilesStorage.Subscribe(context.Background())
+	updatesCh, err := tilesStorage.Subscribe(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to tile updates: %w", err)
+	}
 	a.publisher = websocket_publisher.New(updatesCh, answerer)
 	a.controller = clicks_controller.New(
 		clickHandlerService,
