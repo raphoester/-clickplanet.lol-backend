@@ -53,11 +53,76 @@ func (s *testSuite) TestSetAndPublish() {
 		case <-ctx.Done():
 			s.T().Fatal("timeout")
 		case val := <-listener:
-			s.T().Logf("received %v", val)
+			s.Assert().Equal("fr", val.Value)
+			s.Assert().Equal(uint32(10), val.Tile)
+			s.Assert().Equal("", val.Previous)
 		}
 	}()
 
-	err = s.storage.Set(context.Background(), 10, "test")
+	err = s.storage.Set(context.Background(), 10, "fr")
+	s.Require().NoError(err)
+
+	wg.Wait()
+}
+
+func (s *testSuite) TestSetAndPublishWithOverride() {
+	previousValue := "us"
+	newValue := "fr"
+
+	err := s.storage.Set(context.Background(), 10, previousValue)
+	s.Require().NoError(err)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	listener, err := s.storage.Subscribe(ctx)
+	s.Require().NoError(err)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		select {
+		case <-ctx.Done():
+			s.T().Fatal("timeout")
+		case val := <-listener:
+			s.Assert().Equal(newValue, val.Value)
+			s.Assert().Equal(uint32(10), val.Tile)
+			s.Assert().Equal(previousValue, val.Previous)
+		}
+	}()
+
+	err = s.storage.Set(context.Background(), 10, newValue)
+	s.Require().NoError(err)
+
+	wg.Wait()
+}
+
+func (s *testSuite) TestSetAndPublishWithOverrideAndNoChange() {
+	constantValue := "fr"
+
+	err := s.storage.Set(context.Background(), 10, constantValue)
+	s.Require().NoError(err)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	listener, err := s.storage.Subscribe(ctx)
+	s.Require().NoError(err)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		select {
+		case <-ctx.Done():
+			s.T().Logf("as expected, no message was received")
+		case val := <-listener:
+			s.T().Fatal("unexpected value", val)
+		}
+	}()
+
+	err = s.storage.Set(context.Background(), 10, constantValue)
 	s.Require().NoError(err)
 
 	wg.Wait()
