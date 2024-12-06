@@ -71,6 +71,10 @@ func NewRedis() (*Redis, error) {
 		"/static",
 	).Load(context.Background())
 
+	if err != nil {
+		return nil, fmt.Errorf("failed to load scripts: %w", err)
+	}
+
 	return &Redis{
 		ScriptsMap: scriptsMap,
 		Client:     redisClient,

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/adapters/secondary/redis_tile_storage"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain"
 	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/xenvs"
 	"github.com/stretchr/testify/suite"
 )
@@ -17,8 +18,11 @@ func TestRunSuite(t *testing.T) {
 
 type testSuite struct {
 	suite.Suite
-	storage *redis_tile_storage.Storage
-	redis   *xenvs.Redis
+	storage interface {
+		Set(ctx context.Context, tile uint32, value string) error
+		Subscribe(ctx context.Context) (<-chan domain.TileUpdate, error)
+	}
+	redis *xenvs.Redis
 }
 
 func (s *testSuite) SetupSuite() {
@@ -26,8 +30,11 @@ func (s *testSuite) SetupSuite() {
 	s.redis, err = xenvs.NewRedis()
 	s.Require().NoError(err)
 
-	setAndPublishSha1 := s.redis.ScriptsMap["setAndPublish"]
-	s.storage = redis_tile_storage.New(s.redis.Client, setAndPublishSha1)
+	setAndPublishOnStreamSha1 := s.redis.ScriptsMap["setAndPublishOnStream"]
+	s.storage = redis_tile_storage.NewStreamStorage(s.redis.Client, setAndPublishOnStreamSha1)
+
+	//setAndPublishSha1 := s.redis.ScriptsMap["setAndPublish"]
+	//s.storage = redis_tile_storage.New(s.redis.Client, setAndPublishSha1)
 }
 
 func (s *testSuite) TearDownSuite() {
@@ -39,7 +46,7 @@ func (s *testSuite) SetupTest() {
 }
 
 func (s *testSuite) TestSetAndPublish() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	listener, err := s.storage.Subscribe(ctx)
@@ -51,7 +58,7 @@ func (s *testSuite) TestSetAndPublish() {
 		defer wg.Done()
 		select {
 		case <-ctx.Done():
-			s.T().Fatal("timeout")
+			s.T().Errorf("timeout")
 		case val := <-listener:
 			s.Assert().Equal("fr", val.Value)
 			s.Assert().Equal(uint32(10), val.Tile)
@@ -84,7 +91,7 @@ func (s *testSuite) TestSetAndPublishWithOverride() {
 		defer wg.Done()
 		select {
 		case <-ctx.Done():
-			s.T().Fatal("timeout")
+			s.T().Errorf("timeout")
 		case val := <-listener:
 			s.Assert().Equal(newValue, val.Value)
 			s.Assert().Equal(uint32(10), val.Tile)
@@ -104,7 +111,7 @@ func (s *testSuite) TestSetAndPublishWithOverrideAndNoChange() {
 	err := s.storage.Set(context.Background(), 10, constantValue)
 	s.Require().NoError(err)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	listener, err := s.storage.Subscribe(ctx)
@@ -118,7 +125,7 @@ func (s *testSuite) TestSetAndPublishWithOverrideAndNoChange() {
 		case <-ctx.Done():
 			s.T().Logf("as expected, no message was received")
 		case val := <-listener:
-			s.T().Fatal("unexpected value", val)
+			s.T().Errorf("unexpected value %v", val)
 		}
 	}()
 
