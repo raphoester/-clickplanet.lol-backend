@@ -28,3 +28,6 @@ dRun:
 
 dRm:
 	@docker rm -f clickplanet
+
+test:
+	@go test -v ./... | grep -v 'no test files'

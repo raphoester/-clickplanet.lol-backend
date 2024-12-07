@@ -20,7 +20,11 @@ func New() *Storage {
 	}
 }
 
-func (s *Storage) Set(tile uint32, value string) {
+func (s *Storage) Set(
+	_ context.Context,
+	tile uint32,
+	value string,
+) error {
 	s.tilesMu.Lock()
 	previous := s.tiles[tile]
 	s.tiles[tile] = value
@@ -37,10 +41,8 @@ func (s *Storage) Set(tile uint32, value string) {
 			}
 		}()
 	}
-}
 
-func (s *Storage) GetFullState(_ context.Context) (map[uint32]string, error) {
-	return s.tiles, nil // ownership leak but copying the map would be too expensive
+	return nil
 }
 
 func (s *Storage) Subscribe(_ context.Context) <-chan domain.TileUpdate {
@@ -49,4 +51,20 @@ func (s *Storage) Subscribe(_ context.Context) <-chan domain.TileUpdate {
 	s.subscribers = append(s.subscribers, ch)
 	s.subsMu.Unlock()
 	return ch
+}
+
+func (s *Storage) GetStateBatch(
+	_ context.Context,
+	start uint32,
+	end uint32,
+) (map[uint32]string, error) {
+	s.tilesMu.Lock()
+	defer s.tilesMu.Unlock()
+	res := make(map[uint32]string)
+	for i := start; i <= end; i++ {
+		if val, ok := s.tiles[i]; ok {
+			res[i] = val
+		}
+	}
+	return res, nil
 }

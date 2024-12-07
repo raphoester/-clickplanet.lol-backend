@@ -44,14 +44,32 @@ func (s *StreamStorage) Set(ctx context.Context, tile uint32, value string) erro
 	return nil
 }
 
-func (s *StreamStorage) GetFullState(ctx context.Context) (map[uint32]string, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (s *StreamStorage) GetStateBatch(ctx context.Context, start uint32, end uint32) (map[uint32]string, error) {
-	//TODO implement me
-	panic("implement me")
+	keys := make([]string, 0, end-start+1)
+	for i := start; i <= end; i++ {
+		keys = append(keys, strconv.FormatUint(uint64(i), 10))
+	}
+
+	values, err := s.redis.MGet(ctx, keys...).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tile values: %w", err)
+	}
+
+	retMap := make(map[uint32]string, len(values))
+	for i, key := range keys {
+		if values[i] == nil {
+			continue
+		}
+
+		tile, err := strconv.ParseUint(key, 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse tileId to int: %w", err)
+		}
+
+		retMap[uint32(tile)] = values[i].(string)
+	}
+
+	return retMap, nil
 }
 
 func (s *StreamStorage) Subscribe(ctx context.Context) (<-chan domain.TileUpdate, error) {
@@ -72,8 +90,8 @@ func (s *StreamStorage) Subscribe(ctx context.Context) (<-chan domain.TileUpdate
 			default:
 				xReadRes := s.redis.XRead(ctx, &redis.XReadArgs{
 					Streams: []string{streamLabel, startID},
-					Count:   1,
-					Block:   10 * time.Millisecond, // block for 100 ms if there are no messages, DO NOT SET AT 0 OTHERWISE IT WILL BLOCK FOREVER
+					Count:   100,
+					Block:   1 * time.Second, // DO NOT SET AT 0 OTHERWISE IT WILL BLOCK FOREVER
 				})
 
 				// signal that the subscription is ready, in a select otherwise it will block the goroutine
@@ -88,26 +106,28 @@ func (s *StreamStorage) Subscribe(ctx context.Context) (<-chan domain.TileUpdate
 					continue
 				}
 
-				wg.Add(1)
+				if len(streams) == 0 {
+					continue
+				}
 
+				if len(streams[0].Messages) == 0 {
+					continue
+				}
+
+				startID = streams[0].Messages[len(streams[0].Messages)-1].ID
+
+				wg.Add(1)
 				// handle slow consumers in a separate goroutine
 				// the waitGroup will be done when the slow consumer is done, making sure the goroutine is not closed
 				// because of the context finishing before the slow consumer is done
 				go func() {
-
 					defer wg.Done()
-					if len(streams) == 0 {
-						return
-					}
-
 					for _, message := range streams[0].Messages {
-
 						// reducing bandwidth
 						// t : tile
 						// n : new value
 						// o : old value
 
-						startID = message.ID
 						tileId, err := strconv.ParseUint(fmt.Sprint(message.Values["t"]), 10, 32)
 						if err != nil {
 							errsCh <- fmt.Errorf("failed to parse tileId to int: %w", err)

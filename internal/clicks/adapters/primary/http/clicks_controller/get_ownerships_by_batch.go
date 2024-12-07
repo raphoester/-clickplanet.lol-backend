@@ -19,7 +19,7 @@ func (c *Controller) GetOwnershipsByBatch(w http.ResponseWriter, r *http.Request
 	}
 
 	endTileId := req.GetEndTileId()
-	if c.tilesChecker.MaxIndex() < endTileId {
+	if endTileId > c.tilesChecker.MaxIndex() {
 		endTileId = c.tilesChecker.MaxIndex()
 	}
 

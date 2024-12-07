@@ -103,7 +103,6 @@ func (a *App) declareRoutes() {
 	appRouter := http.NewServeMux()
 	appRouter.HandleFunc("GET /map-density", a.controller.GetMapDensity)
 	appRouter.HandleFunc("POST /click", a.controller.HandleClick)
-	appRouter.HandleFunc("GET /ownerships", a.controller.GetOwnerships)
 	appRouter.HandleFunc("POST /ownerships-by-batch", a.controller.GetOwnershipsByBatch)
 
 	appMiddlewares := httpserver.MiddlewareStack(

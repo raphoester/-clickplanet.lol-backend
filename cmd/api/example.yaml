@@ -2,7 +2,7 @@ httpServer:
   bindAddress: 0.0.0.0:8080
   format: binary # binary, json
 gameMap:
-  maxIndex: 1004892
+  maxIndex: 257946
 tilesStorage:
   # should be written in /static/setAndPublish.sha1 after devDb is run
   setAndPublishSha1: "1bb67149ba7631bb4ac8719b8356a1c072a45d4f"
