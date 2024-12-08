@@ -76,3 +76,7 @@ func (p *Publisher) Subscribe(w http.ResponseWriter, r *http.Request) {
 	p.clients[conn] = &clientMD{}
 	p.mu.Unlock()
 }
+
+func (p *Publisher) DeclareRoutes(router *http.ServeMux) {
+	router.HandleFunc("/listen", p.Subscribe)
+}

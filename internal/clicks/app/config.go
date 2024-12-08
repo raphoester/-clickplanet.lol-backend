@@ -18,6 +18,7 @@ type GameMapConfig struct {
 }
 
 type TilesStorageConfig struct {
-	Redis             xredis.Config
-	SetAndPublishSha1 string
+	Redis                     xredis.Config
+	SetAndPublishSha1         string
+	SetAndPublishOnStreamSha1 string
 }

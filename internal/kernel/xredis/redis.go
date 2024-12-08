@@ -16,7 +16,7 @@ type Config struct {
 	TLS      bool
 }
 
-func NewClient(config Config) (*redis.Client, error) {
+func NewClient(ctx context.Context, config Config) (*redis.Client, error) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     config.Address,
 		Username: config.Username,
@@ -34,7 +34,7 @@ func NewClient(config Config) (*redis.Client, error) {
 		}(),
 	})
 
-	_, err := redisClient.Ping(context.Background()).Result()
+	_, err := redisClient.Ping(ctx).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to ping redis: %w", err)
 	}
