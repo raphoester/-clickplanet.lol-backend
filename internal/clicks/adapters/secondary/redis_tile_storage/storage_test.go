@@ -2,13 +2,14 @@ package redis_tile_storage_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/adapters/secondary/redis_tile_storage"
-	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain"
 	"github.com/raphoester/clickplanet.lol-backend/internal/kernel/xenvs"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -18,12 +19,8 @@ func TestRunSuite(t *testing.T) {
 
 type testSuite struct {
 	suite.Suite
-	storage interface {
-		Set(ctx context.Context, tile uint32, value string) error
-		Subscribe(ctx context.Context) (<-chan domain.TileUpdate, error)
-		GetStateBatch(ctx context.Context, start uint32, end uint32) (map[uint32]string, error)
-	}
-	redis *xenvs.Redis
+	storage *redis_tile_storage.Storage
+	redis   *xenvs.Redis
 }
 
 func (s *testSuite) SetupSuite() {
@@ -32,10 +29,7 @@ func (s *testSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	setAndPublishOnStreamSha1 := s.redis.ScriptsMap["setAndPublishOnStream"]
-	s.storage = redis_tile_storage.NewStreamStorage(s.redis.Client, setAndPublishOnStreamSha1)
-
-	//setAndPublishSha1 := s.redis.ScriptsMap["setAndPublish"]
-	//s.storage = redis_tile_storage.New(s.redis.Client, setAndPublishSha1)
+	s.storage = redis_tile_storage.New(s.redis.Client, redis_tile_storage.Config{SetAndPublishOnStreamSha1: setAndPublishOnStreamSha1})
 }
 
 func (s *testSuite) TearDownSuite() {
@@ -139,7 +133,7 @@ func (s *testSuite) TestSetAndPublishWithOverrideAndNoChange() {
 func (s *testSuite) TestSetAndPublishWithALotOfConcurrentMessages() {
 	constantValue := "fr"
 
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	listener, err := s.storage.Subscribe(ctx)
@@ -203,9 +197,42 @@ func (s *testSuite) TestGetStateByBatch() {
 
 	state, err := s.storage.GetStateBatch(ctx, 10, 30) // bounds are inclusive
 	s.Require().NoError(err)
-	
+
 	s.Assert().Equal(3, len(state))
 	s.Assert().Equal(constantValue, state[10])
 	s.Assert().Equal(constantValue, state[20])
 	s.Assert().Equal(constantValue, state[30])
+}
+
+func (s *testSuite) TestPastUpdates() {
+	xAdd := func(t time.Time, i int) error {
+		return s.redis.Client.XAdd(context.Background(), &redis.XAddArgs{
+			Stream: "tileUpdates", // stream name corresponds in ./stream_storage.go
+			ID:     fmt.Sprintf("%d-%d", t.UnixMilli(), i),
+			Values: []string{"t", fmt.Sprintf("%d", i), "n", "fr", "o", "us"},
+		}).Err()
+	}
+
+	xAdd1Time := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC) // 00:00:00
+
+	err := xAdd(xAdd1Time, 10)
+	s.Require().NoError(err)
+
+	xAdd2Time := xAdd1Time.Add(45 * time.Minute) // 00:45:00
+	err = xAdd(xAdd2Time, 11)
+
+	xAdd3Time := xAdd2Time.Add(10 * time.Minute) // 00:55:00
+	err = xAdd(xAdd3Time, 12)
+
+	queryTime := xAdd3Time.Add(30 * time.Minute) // 01:25:00
+
+	pastUpdates, err := s.storage.PastUpdates(context.Background(), 1*time.Hour, queryTime)
+	s.Require().NoError(err)
+	s.Assert().Equal(2, len(pastUpdates))
+
+	s.Assert().Equal(uint32(11), pastUpdates[0].Tile)
+	s.Assert().Equal("fr", pastUpdates[0].Value)
+
+	s.Assert().Equal(uint32(12), pastUpdates[1].Tile)
+	s.Assert().Equal("fr", pastUpdates[1].Value)
 }

@@ -3,7 +3,7 @@ package x_publisher
 import (
 	"context"
 
-	"github.com/raphoester/clickplanet.lol-backend/internal/bookkeeping/runner"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain/runner"
 )
 
 func New() *Publisher {

@@ -26,7 +26,7 @@ func (a *App) configureRedisClientIfNeeded(ctx context.Context) error {
 		return nil
 	}
 
-	redisClient, err := xredis.NewClient(ctx, a.config.TilesStorage.Redis)
+	redisClient, err := xredis.NewClient(ctx, a.config.Redis)
 	if err != nil {
 		return fmt.Errorf("failed to create redis client: %w", err)
 	}

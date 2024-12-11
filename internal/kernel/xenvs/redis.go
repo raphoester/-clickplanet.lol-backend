@@ -47,7 +47,7 @@ func NewRedis() (*Redis, error) {
 
 	var redisClient *redis.Client
 	err = pool.Retry(func() error {
-		redisClient, err = xredis.NewClient(xredis.Config{
+		redisClient, err = xredis.NewClient(context.Background(), xredis.Config{
 			Address:  fmt.Sprintf("localhost:%s", port),
 			Username: "",
 			Password: "",

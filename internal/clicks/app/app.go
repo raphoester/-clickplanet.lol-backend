@@ -49,11 +49,6 @@ func New() (*App, error) {
 }
 
 func (a *App) Configure(ctx context.Context) error {
-	appV1, err := a.configureAppV1(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to configure app v1: %w", err)
-	}
-
 	appV2, err := a.configureAppV2(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to configure app v2: %w", err)
@@ -71,14 +66,6 @@ func (a *App) Configure(ctx context.Context) error {
 	)
 
 	router := http.NewServeMux()
-
-	appV1RPCRouter := http.NewServeMux()
-	appV1.declareRPCRoutes(appV1RPCRouter)
-	router.Handle("/api/", http.StripPrefix("/api", rpcMiddlewares(appV1RPCRouter)))
-
-	appV1WSRouter := http.NewServeMux()
-	appV1.declareWSRoutes(appV1WSRouter)
-	router.Handle("/ws/", http.StripPrefix("/ws", wsMiddlewares(appV1WSRouter)))
 
 	appV2RPCRouter := http.NewServeMux()
 	appV2.declareRPCRoutes(appV2RPCRouter)

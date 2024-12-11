@@ -21,7 +21,7 @@ func (a *App) configureAppV2(ctx context.Context) (*ConfigureAppResponse, error)
 
 	tilesChecker := in_memory_tile_checker.New(a.config.GameMap.MaxIndex)
 	countryChecker := in_memory_country_checker.New()
-	tilesStorage := redis_tile_storage.NewStreamStorage(a.redisClient, a.config.TilesStorage.SetAndPublishOnStreamSha1)
+	tilesStorage := redis_tile_storage.New(a.redisClient, a.config.TilesStorage)
 
 	var clickHandlerService click_handler_service.IService = click_handler_service.New(
 		tilesChecker,
