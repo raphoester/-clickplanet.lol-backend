@@ -8,7 +8,6 @@ proto:
 dbUp:
 	@cd ./tools/devdb && \
 		docker-compose up -d --wait
-		docker exec -i clickPlanet-redis /bin/sh -c "(redis-cli -x script load < /static/setAndPublish.lua) > /static/setAndPublish.sha1"
 		docker exec -i clickPlanet-redis /bin/sh -c "(redis-cli -x script load < /static/setAndPublishOnStream.lua) > /static/setAndPublishOnStream.sha1"
 
 dbDown:

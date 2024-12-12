@@ -10,6 +10,7 @@ import (
 	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/adapters/secondary/in_memory_tile_checker"
 	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/adapters/secondary/redis_tile_storage"
 	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain/click_handler_service"
+	"github.com/raphoester/clickplanet.lol-backend/internal/clicks/domain/click_handler_service/prom_click_handler_service"
 )
 
 func (a *App) configureAppV2(ctx context.Context) (*ConfigureAppResponse, error) {
@@ -29,10 +30,10 @@ func (a *App) configureAppV2(ctx context.Context) (*ConfigureAppResponse, error)
 		countryChecker,
 	)
 
-	//clickHandlerService, err := prom_click_handler_service.New(clickHandlerService, a.promRegistry)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create prometheus click handler service: %w", err)
-	//}
+	clickHandlerService, err := prom_click_handler_service.New(clickHandlerService, a.promRegistry)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create prometheus click handler service: %w", err)
+	}
 
 	updatesCh, err := tilesStorage.Subscribe(context.Background())
 	if err != nil {
